@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lazy Cloudd</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    /* ── Item Layout ────────────────────────────────────────────────────── */
+    .item-page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: clamp(24px, 4vw, 48px) clamp(16px, 5vw, 48px) clamp(48px, 8vw, 80px);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(24px, 4vw, 56px);
+      align-items: start;
+    }
+
+    /* ── Gallery ────────────────────────────────────────────────────────── */
+    .gallery {
+      position: sticky;
+      top: 80px;
+    }
+
+    .gallery-main {
+      width: 100%;
+      aspect-ratio: 3/4;
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--purple-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .gallery-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gallery-slide {
+      width: 100%;
+      height: 100%;
+      flex: 0 0 100%;
+    }
+
+    .gallery-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-dots {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+    }
+
+    .gallery-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .gallery-dot.active {
+      background: #fff;
+      transform: scale(1.3);
+    }
+
+    .gallery-thumbs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .gallery-thumb {
+      width: 62px;
+      height: 72px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+      background: var(--purple-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      transition: border-color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .gallery-thumb.active {
+      border-color: var(--purple);
+    }
+
+    .gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ── Item Info ──────────────────────────────────────────────────────── */
+    .item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .item-cats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .item-cat-tag {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      background: var(--purple-light);
+      color: var(--purple);
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-decoration: none;
+    }
+
+    .item-name {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.5rem, 3.5vw, 2rem);
+      color: var(--purple);
+      line-height: 1.25;
+    }
+
+    .item-price {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .item-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .item-note {
+      font-size: 0.75rem;
+      color: var(--text);
+      line-height: 1.65;
+      background: var(--blush);
+      border: 1.5px solid var(--purple-light);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .item-dimensions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .item-dimensions span {
+      background: var(--purple-light);
+      color: var(--purple);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .add-cart-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--purple);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .add-cart-btn:hover {
+      background: var(--purple-mid);
+    }
+
+    .add-cart-btn:active {
+      transform: scale(0.98);
+    }
+
+    .wa-direct-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--purple);
+      border: 1.5px solid var(--purple);
+      border-radius: 12px;
+      padding: 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+
+    .wa-direct-btn:hover {
+      background: var(--purple-light);
+    }
+
+    .gallery-main {
+      position: relative;
+    }
+
+    .gallery-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.82);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      transition: background 0.2s;
+      z-index: 2;
+    }
+
+    .gallery-arrow:hover {
+      background: #fff;
+    }
+
+    .gallery-arrow.prev {
+      left: 10px;
+    }
+
+    .gallery-arrow.next {
+      right: 10px;
+    }
+
+    .not-found {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 680px) {
+      .item-page {
+        grid-template-columns: 1fr;
+      }
+
+      .gallery {
+        position: static;
+      }
+
+      .gallery-main {
+        aspect-ratio: 4/3;
+        border-radius: 0;
+        margin: 0 -16px 12px;
+        width: calc(100% + 32px);
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav id="site-nav"></nav>
+
+  <div id="itemPage"></div>
+
+  <footer id="site-footer"></footer>
+
+  <script src="products.js"></script>
+  <script src="assets/components.js"></script>
+  <script>
+    LC.renderNav('item');
+    LC.renderFooter();
+    LC.initCart({ emptyMsg: 'No items yet!' });
+
+    const id = +new URLSearchParams(window.location.search).get('id');
+    const p = PRODUCTS.find(x => x.id === id);
+
+    function getImgs(p) {
+      if (!p.img) return [];
+      return Array.isArray(p.img) ? p.img : [p.img];
+    }
+
+    function renderItem() {
+      const root = document.getElementById('itemPage');
+      if (!p) {
+        root.innerHTML = '<div class="not-found">🌸<br />Product not found.<br /><a href="catalog.html">Back to collections</a></div>';
+        return;
+      }
+      document.title = `${p.name} — Lazy Cloudd`;
+
+      const imgs = getImgs(p);
+      const bg = BG[Array.isArray(p.collection) ? p.collection[0] : p.collection] || '#ede8ff';
+      const cats = Array.isArray(p.collection) ? p.collection : [p.collection];
+
+      const hasMulti = imgs.length > 1;
+
+      const galleryInner = imgs.length > 0
+        ? (hasMulti
+          ? `<div class="gallery-track" id="galleryTrack">${imgs.map(src => `<div class="gallery-slide"><img src="${IMG_BASE}${src}" alt="${p.name}" /></div>`).join('')}</div>
+               <div class="gallery-dots" id="galleryDots">${imgs.map((_, i) => `<button class="gallery-dot${i === 0 ? ' active' : ''}" data-i="${i}"></button>`).join('')}</div>`
+          : `<img src="${IMG_BASE}${imgs[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />`)
+        : `<span style="font-size:5rem">${p.emoji || '🌸'}</span>`;
+
+      const arrows = hasMulti ? `
+        <button class="gallery-arrow prev" id="galleryPrev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button class="gallery-arrow next" id="galleryNext"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></button>` : '';
+
+      const thumbs = hasMulti ? `
+        <div class="gallery-thumbs" id="thumbs">
+          ${imgs.map((src, i) => `
+            <div class="gallery-thumb ${i === 0 ? 'active' : ''}" data-i="${i}" data-src="${IMG_BASE}${src}">
+              <img src="${IMG_BASE}${src}" alt="" />
+            </div>`).join('')}
+        </div>` : '';
+
+      const catTags = cats.map(c => {
+        const tab = TABS.find(t => t.id === c);
+        return tab ? `<a href="collection.html?cat=${c}" class="item-cat-tag">${tab.label}</a>` : '';
+      }).join('');
+
+      root.innerHTML = `
+        <div class="item-page">
+          <div class="gallery">
+            <div class="gallery-main" style="background:${bg}">${galleryInner}${arrows}</div>
+            ${thumbs}
+          </div>
+          <div class="item-info">
+            <div class="item-cats">${catTags}</div>
+            <h1 class="item-name">${p.name}</h1>
+            <span class="item-price">RM ${p.price}</span>
+            ${p.badge ? `<span class="item-badge ${BADGE_CLASS[p.badge]}">${BADGE_LABEL[p.badge]}</span>` : ''}
+            ${p.desc ? `<p class="item-note">${p.desc}</p>` : ''}
+            ${(p.height || p.width) ? `<p class="item-dimensions">
+              ${p.height ? `<span>Height: ${p.height}</span>` : ''}
+              ${p.width ? `<span>Width: ${p.width}</span>` : ''}
+            </p>` : ''}
+            <div class="item-actions">
+              <button class="add-cart-btn" id="addCartBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                Add to Cart
+              </button>
+              <a class="wa-direct-btn" id="waDirectBtn" href="#" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Enquire about this item
+              </a>
+            </div>
+          </div>
+        </div>`;
+
+      if (hasMulti) {
+        let currentIdx = 0;
+
+        const galleryMain = root.querySelector('.gallery-main');
+        function goTo(i) {
+          currentIdx = (i + imgs.length) % imgs.length;
+          const w = galleryMain.offsetWidth;
+          root.querySelector('#galleryTrack').style.transform = `translateX(-${currentIdx * w}px)`;
+          root.querySelectorAll('.gallery-dot').forEach(d => d.classList.toggle('active', +d.dataset.i === currentIdx));
+          root.querySelectorAll('.gallery-thumb').forEach(t => t.classList.toggle('active', +t.dataset.i === currentIdx));
+        }
+
+        root.querySelectorAll('.gallery-thumb').forEach(thumb => {
+          thumb.addEventListener('click', () => goTo(+thumb.dataset.i));
+        });
+        root.querySelectorAll('.gallery-dot').forEach(dot => {
+          dot.addEventListener('click', () => goTo(+dot.dataset.i));
+        });
+        const prevBtn = root.querySelector('#galleryPrev');
+        const nextBtn = root.querySelector('#galleryNext');
+        if (prevBtn) prevBtn.addEventListener('click', () => goTo(currentIdx - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => goTo(currentIdx + 1));
+      }
+
+      root.querySelector('#addCartBtn').addEventListener('click', () => LC.addToCart(p.id));
+
+      const cleanName = p.name.replace(/\p{Extended_Pictographic}/gu, "").replace(/[️‍]/g, "").replace(/\s+/g, " ").trim();
+      const msg = `Hi! I'd like to enquire about *${cleanName}* (RM ${p.price}) \n\nCould you confirm availability and pricing? Thank you!`;
+      root.querySelector('#waDirectBtn').href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+    }
+
+    renderItem();
+  </script>
+</body>
+
+</html>

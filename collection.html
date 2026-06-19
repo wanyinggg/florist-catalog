@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lazy Cloudd</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    /* ── Page Header ────────────────────────────────────────────────────── */
+    .page-header {
+      padding: clamp(24px, 4vw, 44px) clamp(16px, 5vw, 80px) 20px;
+    }
+
+    .page-header-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--pink-deep);
+      margin-bottom: 6px;
+    }
+
+    .page-header-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      color: var(--purple);
+      line-height: 1.2;
+    }
+
+    /* ── Product Grid ───────────────────────────────────────────────────── */
+    .product-grid {
+      padding: 0 clamp(16px, 5vw, 80px) clamp(40px, 7vw, 72px);
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .product-card {
+      background: var(--white);
+      border: 1.5px solid var(--purple-light);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: transform 0.22s, box-shadow 0.22s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(70, 90, 220, 0.12);
+    }
+
+    .card-img {
+      width: 100%;
+      height: 230px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s;
+    }
+
+    .product-card:hover .card-img img {
+      transform: scale(1.05);
+    }
+
+    .card-img-emoji {
+      transition: transform 0.3s;
+    }
+
+    .product-card:hover .card-img-emoji {
+      transform: scale(1.1);
+    }
+
+    .card-body {
+      padding: 13px 15px 15px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .card-name {
+      font-size: 0.9rem;
+      color: var(--purple);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+      flex: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-price {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card-price span {
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--purple);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 7px 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .add-btn:hover {
+      background: var(--purple-mid);
+    }
+
+    .add-btn:active {
+      transform: scale(0.96);
+    }
+
+    .grid-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      padding: 60px 20px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 600px) {
+      .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+        gap: 12px;
+      }
+
+      .card-img {
+        font-size: 3rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav id="site-nav"></nav>
+
+  <div class="page-header">
+    <h1 class="page-header-title" id="pageTitle">—</h1>
+  </div>
+
+  <div class="product-grid" id="productGrid"></div>
+
+  <footer id="site-footer"></footer>
+
+  <script src="products.js"></script>
+  <script src="assets/components.js"></script>
+  <script>
+    LC.renderNav('collection');
+    LC.renderFooter();
+    LC.initCart({ emptyMsg: 'No items yet — browse our collections!' });
+
+    const catId = new URLSearchParams(window.location.search).get('cat') || '';
+    const catTab = TABS.find(t => t.id === catId);
+
+    if (catTab) {
+      document.title = `${catTab.label} — Lazy Cloudd`;
+      document.getElementById('pageTitle').textContent = catTab.label;
+    } else {
+      document.getElementById('pageTitle').textContent = 'Collection';
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('productGrid');
+      const inCat = p => Array.isArray(p.collection) ? p.collection.includes(catId) : p.collection === catId;
+      const items = (catId ? PRODUCTS.filter(inCat) : PRODUCTS).sort((a, b) => a.price - b.price);
+      if (items.length === 0) {
+        grid.innerHTML = '<p class="grid-empty">🌸<br />No products in this collection yet.</p>';
+        return;
+      }
+      items.forEach(p => {
+        const card = document.createElement('div'); card.className = 'product-card';
+        const bg = BG[Array.isArray(p.collection) ? p.collection[0] : p.collection] || '#ede8ff';
+        card.innerHTML = `
+          <div class="card-img" style="background:${bg}">
+            ${p.img ? (Array.isArray(p.img) && p.img.length > 1
+              ? `<div class="img-track">${p.img.map(s => `<div class="img-slide"><img src="${IMG_BASE}${s}" alt="${p.name}" /></div>`).join('')}</div>`
+              : `<img src="${IMG_BASE}${Array.isArray(p.img) ? p.img[0] : p.img}" alt="${p.name}" />`) : `<span class="card-img-emoji">${p.emoji}</span>`}
+            ${p.badge ? `<span class="card-badge ${BADGE_CLASS[p.badge]}">${BADGE_LABEL[p.badge]}</span>` : ''}
+          </div>
+          <div class="card-body">
+            <p class="card-name">${p.name}</p>
+            <p class="card-desc">${p.desc}</p>
+            <div class="card-footer">
+              <div class="card-price">RM ${p.price}</div>
+              <button class="add-btn" data-id="${p.id}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                Add
+              </button>
+            </div>
+          </div>`;
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => location.href = `item.html?id=${p.id}`);
+        grid.appendChild(card);
+      });
+      grid.querySelectorAll('.add-btn').forEach(btn =>
+        btn.addEventListener('click', e => { e.stopPropagation(); LC.addToCart(+btn.dataset.id); })
+      );
+    }
+
+    renderGrid();
+    LC.initCarousels();
+  </script>
+</body>
+
+</html>
