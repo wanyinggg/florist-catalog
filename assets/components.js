@@ -185,8 +185,6 @@ const LC = (() => {
       m += "\n";
     });
     m += `\n*Estimated total:* RM ${total} (excl. shipping)`;
-    m +=
-      "\n\nCould you confirm availability, final price and shipping? Thank you!";
     return m;
   }
 

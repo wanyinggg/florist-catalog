@@ -428,7 +428,7 @@
       root.querySelector('#addCartBtn').addEventListener('click', () => LC.addToCart(p.id));
 
       const cleanName = p.name.replace(/\p{Extended_Pictographic}/gu, "").replace(/[️‍]/g, "").replace(/\s+/g, " ").trim();
-      const msg = `Hi! I'd like to enquire about *${cleanName}* (RM ${p.price}) \n\nCould you confirm availability and pricing? Thank you!`;
+      const msg = `Hi! I'd like to enquire about *${cleanName}* (RM ${p.price})`;
       root.querySelector('#waDirectBtn').href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
     }
 
