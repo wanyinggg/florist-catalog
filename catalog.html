@@ -236,26 +236,22 @@
       transform: scale(1.02);
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .custom-banner {
         flex-direction: column;
       }
 
-      .cat-row {
-        display: flex !important;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
+      .cat-row-scroll {
         scrollbar-width: none;
-        padding: 2px 16px 14px;
-        gap: 10px;
       }
-      .cat-row::-webkit-scrollbar { display: none; }
-      .mini-card {
-        flex: 0 0 130px !important;
-        scroll-snap-align: start;
+
+      .cat-row-scroll::-webkit-scrollbar {
+        display: none;
       }
-      .mini-card-img { height: 150px; }
+
+      .mini-card-img {
+        height: 150px;
+      }
     }
   </style>
 </head>
@@ -289,7 +285,7 @@
   <script>
     LC.renderNav('catalog');
     LC.renderFooter();
-    LC.initCart({ emptyMsg: 'No items yet — browse our collections above!' });
+    LC.initCart({ emptyMsg: 'No items yet' });
 
     function renderStorefront() {
       const main = document.getElementById('storefront');
@@ -313,7 +309,7 @@
         main.appendChild(section);
 
         const row = section.querySelector(`#row-${cat.id}`);
-        const isMobile = window.innerWidth <= 600;
+        const isMobile = mq.matches;
 
         const buildCard = (p) => {
           const card = document.createElement('div');
@@ -341,7 +337,27 @@
         };
 
         if (isMobile) {
-          items.forEach(p => row.appendChild(buildCard(p)));
+          const padPx = `${Math.min(80, Math.max(16, window.innerWidth * 0.05))}px`;
+          row.classList.add('cat-row-scroll');
+          row.style.display = 'flex';
+          row.style.overflowX = 'auto';
+          row.style.gap = '0';
+          row.style.padding = '2px 0 14px';
+          row.style.scrollSnapType = 'x mandatory';
+          row.style.scrollPaddingLeft = padPx;
+          const leadSpacer = document.createElement('div');
+          leadSpacer.style.cssText = `flex: 0 0 ${padPx};`;
+          row.appendChild(leadSpacer);
+          items.forEach((p, i) => {
+            const card = buildCard(p);
+            card.style.flex = '0 0 130px';
+            card.style.scrollSnapAlign = 'start';
+            card.style.marginRight = '10px';
+            row.appendChild(card);
+          });
+          const trailSpacer = document.createElement('div');
+          trailSpacer.style.cssText = `flex: 0 0 ${padPx};`;
+          row.appendChild(trailSpacer);
         } else {
           const sidePad = Math.min(80, Math.max(16, window.innerWidth * 0.05)) * 2;
           const rowWidth = window.innerWidth - sidePad;
@@ -374,6 +390,9 @@
 
     document.getElementById('customWaBtn').href =
       `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi! I'd like to enquire about a custom flower order")}`;
+
+    const mq = window.matchMedia('(max-width: 768px)');
+    mq.addEventListener('change', () => { renderStorefront(); LC.initCarousels(); });
 
     renderStorefront();
     LC.initCarousels();

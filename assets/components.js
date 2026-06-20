@@ -243,11 +243,12 @@ const LC = (() => {
       const slides = track.querySelectorAll(".img-slide");
       if (slides.length <= 1) return;
       let i = 0;
+      const w = track.parentElement.offsetWidth;
       setTimeout(() => {
         setInterval(() => {
           i = (i + 1) % slides.length;
-          track.style.transform = `translateX(-${i * 100}%)`;
-        }, 3500);
+          track.style.transform = `translateX(-${i * w}px)`;
+        }, 5000);
       }, idx * 500);
     });
   }

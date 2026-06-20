@@ -189,7 +189,7 @@
   <script>
     LC.renderNav('collection');
     LC.renderFooter();
-    LC.initCart({ emptyMsg: 'No items yet — browse our collections!' });
+    LC.initCart({ emptyMsg: 'No items yet' });
 
     const catId = new URLSearchParams(window.location.search).get('cat') || '';
     const catTab = TABS.find(t => t.id === catId);
@@ -215,8 +215,8 @@
         card.innerHTML = `
           <div class="card-img" style="background:${bg}">
             ${p.img ? (Array.isArray(p.img) && p.img.length > 1
-              ? `<div class="img-track">${p.img.map(s => `<div class="img-slide"><img src="${IMG_BASE}${s}" alt="${p.name}" /></div>`).join('')}</div>`
-              : `<img src="${IMG_BASE}${Array.isArray(p.img) ? p.img[0] : p.img}" alt="${p.name}" />`) : `<span class="card-img-emoji">${p.emoji}</span>`}
+            ? `<div class="img-track">${p.img.map(s => `<div class="img-slide"><img src="${IMG_BASE}${s}" alt="${p.name}" /></div>`).join('')}</div>`
+            : `<img src="${IMG_BASE}${Array.isArray(p.img) ? p.img[0] : p.img}" alt="${p.name}" />`) : `<span class="card-img-emoji">${p.emoji}</span>`}
             ${p.badge ? `<span class="card-badge ${BADGE_CLASS[p.badge]}">${BADGE_LABEL[p.badge]}</span>` : ''}
           </div>
           <div class="card-body">
