@@ -248,7 +248,7 @@ const LC = (() => {
         setInterval(() => {
           i = (i + 1) % slides.length;
           track.style.transform = `translateX(-${i * w}px)`;
-        }, 5000);
+        }, 3500);
       }, idx * 500);
     });
   }
