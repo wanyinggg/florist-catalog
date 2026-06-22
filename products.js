@@ -266,8 +266,8 @@ const PRODUCTS = [
     ],
     collection: ["graduation"],
     badge: "",
-    // height: "30–35 cm",
-    // width: "10 cm",
+    height: "40 cm",
+    width: "30 cm",
   },
   {
     id: 23,
