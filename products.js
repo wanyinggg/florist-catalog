@@ -507,7 +507,7 @@ const PRODUCTS = [
     id: 49,
     name: "🌷🫧 First Blush",
     desc: "",
-    price: 68,
+    price: 79,
     img: "peach-tulips.png",
     collection: ["pink", "valentines"],
     badge: "",
