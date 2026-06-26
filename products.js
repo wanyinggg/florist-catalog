@@ -538,5 +538,7 @@ const PRODUCTS = [
     img: ["bunny-basket.png", "bunny-basket-1.png"],
     collection: ["basket"],
     badge: "",
+    height: "30cm (including card)",
+    width: "19cm",
   },
 ];
