@@ -535,7 +535,7 @@ const PRODUCTS = [
     name: "🐰🌻☁️ Bunny Field",
     desc: "",
     price: 149,
-    img: ["bunny-basket-1.png", "bunny-basket-2.png"],
+    img: ["bunny-basket.png", "bunny-basket-1.png"],
     collection: ["basket"],
     badge: "",
   },
