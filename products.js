@@ -543,7 +543,7 @@ const PRODUCTS = [
   },
   {
     id: 53,
-    name: "💜 Violet Candy",
+    name: "💜 Purple Rain",
     desc: "",
     price: 49,
     img: "purple-pink-carnation.png",
