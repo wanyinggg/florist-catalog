@@ -530,4 +530,13 @@ const PRODUCTS = [
     collection: ["graduation"],
     badge: "",
   },
+  {
+    id: 52,
+    name: "🐰🌻☁️ Bunny Field",
+    desc: "",
+    price: 149,
+    img: ["bunny-basket-1.png", "bunny-basket-2.png"],
+    collection: ["basket"],
+    badge: "",
+  },
 ];
