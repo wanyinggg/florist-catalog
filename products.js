@@ -541,4 +541,13 @@ const PRODUCTS = [
     height: "30cm (including card)",
     width: "19cm",
   },
+  {
+    id: 53,
+    name: "💜 Violet Candy",
+    desc: "",
+    price: 49,
+    img: "purple-pink-carnation.png",
+    collection: ["mothers"],
+    badge: "",
+  },
 ];
