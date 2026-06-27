@@ -553,5 +553,16 @@ const PRODUCTS = [
     img: "purple-pink-carnation.png",
     collection: "mothers",
     badge: "",
+  },
+  {
+    id: 54,
+    name: "Petals & Glory",
+    desc: "",
+    price: 59,
+    img: "6E88D09D-6BF2-483A-95E9-DCFD484F038D.png",
+    collection: "graduation",
+    badge: "",
+    height: "33cm",
+    width: "22cm",
   }
 ];
