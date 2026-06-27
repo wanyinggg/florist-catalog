@@ -319,6 +319,7 @@
 
   <footer id="site-footer"></footer>
 
+  <script src="assets/supabase.js"></script>
   <script src="products.js"></script>
   <script src="assets/components.js"></script>
   <script>
@@ -327,14 +328,13 @@
     LC.initCart({ emptyMsg: 'No items yet!' });
 
     const id = +new URLSearchParams(window.location.search).get('id');
-    const p = PRODUCTS.find(x => x.id === id);
 
     function getImgs(p) {
       if (!p.img) return [];
       return Array.isArray(p.img) ? p.img : [p.img];
     }
 
-    function renderItem() {
+    function renderItem(p) {
       const root = document.getElementById('itemPage');
       if (!p) {
         root.innerHTML = '<div class="not-found">🌸<br />Product not found.<br /><a href="catalog.html">Back to collections</a></div>';
@@ -350,10 +350,10 @@
 
       const galleryInner = imgs.length > 0
         ? (hasMulti
-          ? `<div class="gallery-track" id="galleryTrack">${imgs.map(src => `<div class="gallery-slide"><img src="${IMG_BASE}${src}" alt="${p.name}" /></div>`).join('')}</div>
+          ? `<div class="gallery-track" id="galleryTrack">${imgs.map(src => `<div class="gallery-slide"><img src="${imgSrc(src)}" alt="${p.name}" /></div>`).join('')}</div>
                <div class="gallery-dots" id="galleryDots">${imgs.map((_, i) => `<button class="gallery-dot${i === 0 ? ' active' : ''}" data-i="${i}"></button>`).join('')}</div>`
-          : `<img src="${IMG_BASE}${imgs[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />`)
-        : `<span style="font-size:5rem">${p.emoji || '🌸'}</span>`;
+          : `<img src="${imgSrc(imgs[0])}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />`)
+        : `<span style="font-size:5rem">🌸</span>`;
 
       const arrows = hasMulti ? `
         <button class="gallery-arrow prev" id="galleryPrev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -362,8 +362,8 @@
       const thumbs = hasMulti ? `
         <div class="gallery-thumbs" id="thumbs">
           ${imgs.map((src, i) => `
-            <div class="gallery-thumb ${i === 0 ? 'active' : ''}" data-i="${i}" data-src="${IMG_BASE}${src}">
-              <img src="${IMG_BASE}${src}" alt="" />
+            <div class="gallery-thumb ${i === 0 ? 'active' : ''}" data-i="${i}">
+              <img src="${imgSrc(src)}" alt="" />
             </div>`).join('')}
         </div>` : '';
 
@@ -403,7 +403,6 @@
 
       if (hasMulti) {
         let currentIdx = 0;
-
         const galleryMain = root.querySelector('.gallery-main');
         function goTo(i) {
           currentIdx = (i + imgs.length) % imgs.length;
@@ -412,27 +411,31 @@
           root.querySelectorAll('.gallery-dot').forEach(d => d.classList.toggle('active', +d.dataset.i === currentIdx));
           root.querySelectorAll('.gallery-thumb').forEach(t => t.classList.toggle('active', +t.dataset.i === currentIdx));
         }
-
-        root.querySelectorAll('.gallery-thumb').forEach(thumb => {
-          thumb.addEventListener('click', () => goTo(+thumb.dataset.i));
-        });
-        root.querySelectorAll('.gallery-dot').forEach(dot => {
-          dot.addEventListener('click', () => goTo(+dot.dataset.i));
-        });
+        root.querySelectorAll('.gallery-thumb').forEach(thumb => thumb.addEventListener('click', () => goTo(+thumb.dataset.i)));
+        root.querySelectorAll('.gallery-dot').forEach(dot => dot.addEventListener('click', () => goTo(+dot.dataset.i)));
         const prevBtn = root.querySelector('#galleryPrev');
         const nextBtn = root.querySelector('#galleryNext');
         if (prevBtn) prevBtn.addEventListener('click', () => goTo(currentIdx - 1));
         if (nextBtn) nextBtn.addEventListener('click', () => goTo(currentIdx + 1));
       }
 
-      root.querySelector('#addCartBtn').addEventListener('click', () => LC.addToCart(p.id));
+      root.querySelector('#addCartBtn').addEventListener('click', () => {
+        PRODUCTS = [p]; // make addToCart work
+        LC.addToCart(p.id);
+      });
 
       const cleanName = p.name.replace(/\p{Extended_Pictographic}/gu, "").replace(/[️‍]/g, "").replace(/\s+/g, " ").trim();
       const msg = `Hi! I'd like to enquire about *${cleanName}* (RM ${p.price})`;
       root.querySelector('#waDirectBtn').href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
     }
 
-    renderItem();
+    document.getElementById('itemPage').innerHTML =
+      '<p style="text-align:center;padding:60px 0;color:#aaa;">Loading...</p>';
+
+    sbGetProduct(id).then(p => renderItem(p)).catch(() => {
+      document.getElementById('itemPage').innerHTML =
+        '<div class="not-found">🌸<br />Failed to load product. Please refresh.</div>';
+    });
   </script>
 </body>
 

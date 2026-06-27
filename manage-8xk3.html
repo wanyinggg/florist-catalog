@@ -672,19 +672,8 @@
         <label>Password</label>
         <input type="password" id="inPw" placeholder="Admin password" autocomplete="current-password" />
       </div>
-      <div class="fg" id="fgToken">
-        <label>GitHub Token <span style="font-weight:400;text-transform:none;letter-spacing:0">(first-time
-            setup)</span></label>
-        <input type="password" id="inToken" placeholder="ghp_..." autocomplete="off" />
-      </div>
-      <button class="btn-primary" id="btnLogin">Login</button>
+        <button class="btn-primary" id="btnLogin">Login</button>
       <p class="err" id="loginErr"></p>
-      <p class="hint" id="loginHint">
-        Need a GitHub token?
-        <a href="https://github.com/settings/tokens/new?scopes=repo&description=florist-catalog-admin" target="_blank"
-          rel="noopener">Create one here</a>
-        — select <strong>repo</strong> scope. Paste it above on first login.
-      </p>
     </div>
   </div>
 
@@ -694,7 +683,6 @@
       <div class="adm-logo">Lazy Cloudd <em>Admin</em></div>
       <div class="hdr-btns">
         <button class="btn-sm btn-add" id="btnAdd">+ Add Product</button>
-        <button class="btn-sm btn-save" id="btnSave">Save to GitHub</button>
         <button class="btn-sm" id="btnLogout">Logout</button>
       </div>
     </header>
@@ -772,79 +760,16 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="assets/supabase.js"></script>
+  <script src="products.js"></script>
   <script>
     if (location.hostname === 'lazycloudd.com') { location.replace('/'); }
 
-    const OWNER = 'wanyinggg', REPO = 'florist-catalog', BRANCH = 'main';
-    const PRODUCTS_PATH = 'products.js', IMG_DIR = 'images';
-    const PW_KEY = 'lc_adm_pw', TK_KEY = 'lc_adm_tk';
-
-    let token = '', products = [], tabs = [], fileSha = '', fileHeader = '';
-    let editingId = null, modalImgs = [], pendingImgs = [], dirty = false, activeCat = '', sortDir = 0; // 0=none,1=asc,-1=desc
-
-    // ── GitHub API ──────────────────────────────────────────────────────────────
-    async function ghGet(path) {
-      const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}&_=${Date.now()}`, {
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
-      });
-      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
-      return r.json();
-    }
-
-    async function ghPut(path, b64, sha, msg) {
-      const body = { message: msg, content: b64, branch: BRANCH };
-      if (sha) body.sha = sha;
-      const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
-        method: 'PUT',
-        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
-      return r.json();
-    }
-
-    // ── Encoding ────────────────────────────────────────────────────────────────
-    const b64Dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
-    const strB64 = s => btoa(unescape(encodeURIComponent(s)));
+    const PW_KEY = 'lc_adm_pw';
     const fileToDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
 
-    // ── Parse & Serialize ───────────────────────────────────────────────────────
-    function parseFile(content) {
-      try { tabs = new Function(content + ';return typeof TABS!=="undefined"?TABS:[];')(); } catch { tabs = []; }
-      try { products = new Function(content + ';return typeof PRODUCTS!=="undefined"?PRODUCTS:[];')(); } catch { products = []; }
-      const marker = 'const PRODUCTS = [';
-      const idx = content.indexOf(marker);
-      fileHeader = idx !== -1 ? content.substring(0, idx) : content;
-    }
-
-    function serializeProducts() {
-      const rows = products.map(p => {
-        const L = ['  {'];
-        L.push(`    id: ${p.id},`);
-        L.push(`    name: ${JSON.stringify(p.name)},`);
-        L.push(`    desc: ${JSON.stringify(p.desc || '')},`);
-        L.push(`    price: ${p.price},`);
-        if (p.img !== undefined) {
-          if (Array.isArray(p.img)) {
-            if (p.img.length > 2) {
-              L.push(`    img: [\n${p.img.map(s => `      ${JSON.stringify(s)},`).join('\n')}\n    ],`);
-            } else {
-              L.push(`    img: [${p.img.map(s => JSON.stringify(s)).join(', ')}],`);
-            }
-          } else {
-            L.push(`    img: ${JSON.stringify(p.img)},`);
-          }
-        }
-        const col = Array.isArray(p.collection) ? p.collection : [p.collection];
-        L.push(`    collection: ${col.length === 1 ? JSON.stringify(col[0]) : `[${col.map(c => JSON.stringify(c)).join(', ')}]`},`);
-        L.push(`    badge: ${JSON.stringify(p.badge || '')},`);
-        if (p.height) L.push(`    height: ${JSON.stringify(p.height)},`);
-        if (p.width) L.push(`    width: ${JSON.stringify(p.width)},`);
-        L.push('  }');
-        return L.join('\n');
-      });
-      return `${fileHeader}const PRODUCTS = [\n${rows.join(',\n')}\n];\n`;
-    }
+    let products = [], tabs = TABS;
+    let editingId = null, modalImgs = [], pendingImgs = [], activeCat = '', sortDir = 0;
 
     // ── UI helpers ──────────────────────────────────────────────────────────────
     function showView(id) {
@@ -859,13 +784,7 @@
       toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
     }
 
-    function updateSaveBtn() {
-      const btn = document.getElementById('btnSave');
-      btn.textContent = dirty ? '● Save to GitHub' : 'Save to GitHub';
-      btn.classList.toggle('dirty', dirty);
-    }
-
-    // ── Product list ────────────────────────────────────────────────────────────
+    // ── Cat filter ──────────────────────────────────────────────────────────────
     function buildCatFilter() {
       const bar = document.getElementById('catFilter');
       bar.innerHTML = '';
@@ -883,6 +802,7 @@
       });
     }
 
+    // ── Product list ────────────────────────────────────────────────────────────
     function renderList(filter = '') {
       const list = document.getElementById('productList');
       const q = filter.toLowerCase();
@@ -896,9 +816,9 @@
       visible.forEach(p => {
         const row = document.createElement('div');
         row.className = 'product-row';
-        const imgSrc = p.img ? (Array.isArray(p.img) ? p.img[0] : p.img) : null;
-        const pending = imgSrc ? pendingImgs.find(x => x.filename === imgSrc) : null;
-        const thumbSrc = pending ? pending.dataUrl : imgSrc ? `${IMG_DIR}/${imgSrc}` : null;
+        const firstImg = p.img ? (Array.isArray(p.img) ? p.img[0] : p.img) : null;
+        const pending = firstImg ? pendingImgs.find(x => x.filename === firstImg) : null;
+        const thumbSrc = pending ? pending.dataUrl : firstImg ? imgSrc(firstImg) : null;
         const cols = (Array.isArray(p.collection) ? p.collection : [p.collection]).join(', ');
         row.innerHTML = `
       <div class="pr-thumb">${thumbSrc ? `<img src="${thumbSrc}" alt="" onerror="this.style.display='none'"/>` : '🌸'}</div>
@@ -912,10 +832,16 @@
         <button class="btn-del">Delete</button>
       </div>`;
         row.querySelector('.btn-edit').onclick = () => openModal(p.id);
-        row.querySelector('.btn-del').onclick = () => {
+        row.querySelector('.btn-del').onclick = async () => {
           if (!confirm(`Delete "${p.name}"?`)) return;
-          products = products.filter(x => x.id !== p.id);
-          dirty = true; renderList(document.getElementById('searchInput').value); updateSaveBtn();
+          try {
+            await sbDelete(p.id);
+            products = products.filter(x => x.id !== p.id);
+            renderList(document.getElementById('searchInput').value);
+            toast('Product deleted.');
+          } catch (err) {
+            toast('Delete failed: ' + err.message, true);
+          }
         };
         list.appendChild(row);
       });
@@ -942,8 +868,9 @@
         const chip = document.createElement('div');
         chip.className = 'img-chip';
         const pending = pendingImgs.find(p => p.filename === img);
-        const src = pending ? pending.dataUrl : `${IMG_DIR}/${img}`;
-        chip.innerHTML = `<img src="${src}" alt="" onerror="this.style.display='none'"/><span title="${img}">${img}</span><button type="button" class="img-rm" title="Remove">✕</button>`;
+        const src = pending ? pending.dataUrl : imgSrc(img);
+        const displayName = img.startsWith('http') ? img.split('/').pop().split('?')[0] : img;
+        chip.innerHTML = `<img src="${src}" alt="" onerror="this.style.display='none'"/><span title="${img}">${displayName}</span><button type="button" class="img-rm" title="Remove">✕</button>`;
         chip.querySelector('.img-rm').onclick = () => { modalImgs.splice(i, 1); renderImgChips(modalImgs); };
         c.appendChild(chip);
       });
@@ -951,6 +878,7 @@
 
     function openModal(id) {
       editingId = id ?? null;
+      pendingImgs = [];
       const p = id != null ? products.find(x => x.id === id) : null;
       document.getElementById('modalTitle').textContent = p ? 'Edit Product' : 'Add Product';
       document.getElementById('fName').value = p?.name ?? '';
@@ -968,10 +896,10 @@
 
     function closeModal() {
       document.getElementById('modal').classList.add('hidden');
-      editingId = null; modalImgs = [];
+      editingId = null; modalImgs = []; pendingImgs = [];
     }
 
-    function saveModal() {
+    async function saveModal() {
       const name = document.getElementById('fName').value.trim();
       const price = parseFloat(document.getElementById('fPrice').value);
       const desc = document.getElementById('fDesc').value.trim();
@@ -984,52 +912,49 @@
       if (isNaN(price) || price < 0) { toast('Enter a valid price.', true); return; }
       if (!collection.length) { toast('Select at least one collection.', true); return; }
 
-      const img = modalImgs.length === 0 ? undefined : modalImgs.length === 1 ? modalImgs[0] : [...modalImgs];
-      const nextId = editingId ?? (products.length ? Math.max(...products.map(p => p.id)) + 1 : 1);
-      const product = {
-        id: nextId, name, desc, price,
-        ...(img !== undefined && { img }),
-        collection: collection.length === 1 ? collection[0] : collection,
-        badge,
-        ...(height && { height }),
-        ...(width && { width })
-      };
-
-      if (editingId != null) {
-        const idx = products.findIndex(p => p.id === editingId);
-        if (idx !== -1) products[idx] = product;
-      } else {
-        products.push(product);
-      }
-
-      dirty = true;
-      renderList(document.getElementById('searchInput').value);
-      updateSaveBtn();
-      closeModal();
-      toast(editingId != null ? 'Product updated.' : 'Product added.');
-    }
-
-    // ── Save to GitHub ──────────────────────────────────────────────────────────
-    async function saveToGitHub() {
-      const btn = document.getElementById('btnSave');
+      const btn = document.getElementById('btnModalSave');
       btn.disabled = true; btn.textContent = 'Saving…';
+
       try {
-        for (const { filename, base64 } of pendingImgs) {
-          let sha;
-          try { sha = (await ghGet(`${IMG_DIR}/${filename}`)).sha; } catch { }
-          await ghPut(`${IMG_DIR}/${filename}`, base64, sha, `Upload image: ${filename}`);
+        // Upload pending images to Supabase Storage
+        const finalImgs = [...modalImgs];
+        for (const pending of pendingImgs) {
+          const idx = finalImgs.indexOf(pending.filename);
+          if (idx !== -1) {
+            const url = await sbUploadImage(pending.filename, pending.base64, pending.mimeType);
+            finalImgs[idx] = url;
+          }
         }
+
+        const img = finalImgs.length === 0 ? null : finalImgs.length === 1 ? finalImgs[0] : finalImgs;
+        const product = {
+          name, 'desc': desc, price,
+          img,
+          collection: collection.length === 1 ? collection[0] : collection,
+          badge: badge || '',
+          height: height || null,
+          width: width || null,
+        };
+
+        if (editingId != null) {
+          await sbUpdate(editingId, product);
+          const idx = products.findIndex(p => p.id === editingId);
+          if (idx !== -1) products[idx] = { ...products[idx], ...product };
+          toast('Product updated.');
+        } else {
+          const result = await sbInsert(product);
+          const newP = Array.isArray(result) ? result[0] : result;
+          products.push(newP);
+          toast('Product added.');
+        }
+
         pendingImgs = [];
-        const content = serializeProducts();
-        const res = await ghPut(PRODUCTS_PATH, strB64(content), fileSha, 'Update products via admin');
-        fileSha = res.content.sha;
-        dirty = false; updateSaveBtn();
-        toast('✓ Saved! Cloudflare will deploy in ~1 min.');
+        renderList(document.getElementById('searchInput').value);
+        closeModal();
       } catch (err) {
         toast('Save failed: ' + err.message, true);
-        updateSaveBtn();
       } finally {
-        btn.disabled = false;
+        btn.disabled = false; btn.textContent = 'Save Product';
       }
     }
 
@@ -1038,83 +963,55 @@
       for (const f of files) {
         const dataUrl = await fileToDataUrl(f);
         const base64 = dataUrl.split(',')[1];
+        const mimeType = f.type || 'image/jpeg';
         const filename = f.name.replace(/\s+/g, '-');
-        pendingImgs.push({ filename, base64, dataUrl });
+        pendingImgs.push({ filename, base64, dataUrl, mimeType });
         modalImgs.push(filename);
       }
       renderImgChips(modalImgs);
     }
 
-    // ── Auth ────────────────────────────────────────────────────────────────────
-    function isSetup() { return !!localStorage.getItem(PW_KEY); }
-
+    // ── Data load ───────────────────────────────────────────────────────────────
     async function loadData() {
       document.getElementById('loading').classList.remove('hidden');
       document.getElementById('productList').innerHTML = '';
       try {
-        const data = await ghGet(PRODUCTS_PATH);
-        fileSha = data.sha;
-        parseFile(b64Dec(data.content));
+        products = await sbGetProducts();
         buildColGrid();
         buildCatFilter();
         renderList();
       } catch (err) {
         toast('Load failed: ' + err.message, true);
-        doLogout();
       } finally {
         document.getElementById('loading').classList.add('hidden');
       }
     }
 
+    // ── Auth ────────────────────────────────────────────────────────────────────
     function doLogout() {
-      token = ''; showView('viewLogin');
+      showView('viewLogin');
       document.getElementById('inPw').value = '';
-      document.getElementById('inToken').value = '';
-      updateLoginUI();
-    }
-
-    function updateLoginUI() {
-      const setup = !isSetup();
-      document.getElementById('loginSub').textContent = setup ? 'First-time Setup' : 'Admin Login';
-      document.getElementById('fgToken').classList.toggle('hidden', !setup);
-      document.getElementById('loginHint').classList.toggle('hidden', !setup);
     }
 
     // ── Events ──────────────────────────────────────────────────────────────────
     document.getElementById('btnLogin').onclick = async () => {
       const pw = document.getElementById('inPw').value;
-      const tk = document.getElementById('inToken').value.trim();
-      const setup = !isSetup();
-
-      if (!pw || (setup && !tk)) {
-        document.getElementById('loginErr').textContent = setup ? 'Enter both a password and your GitHub token.' : 'Enter your password.';
+      if (!pw) { document.getElementById('loginErr').textContent = 'Enter your password.'; return; }
+      const saved = localStorage.getItem(PW_KEY);
+      if (!saved) {
+        localStorage.setItem(PW_KEY, pw);
+      } else if (pw !== saved) {
+        document.getElementById('loginErr').textContent = 'Incorrect password.';
         return;
       }
       document.getElementById('loginErr').textContent = '';
-
-      if (setup) {
-        localStorage.setItem(PW_KEY, pw);
-        localStorage.setItem(TK_KEY, tk);
-      } else {
-        if (pw !== localStorage.getItem(PW_KEY)) {
-          document.getElementById('loginErr').textContent = 'Incorrect password.';
-          return;
-        }
-        if (tk) localStorage.setItem(TK_KEY, tk); // allow token update
-      }
-
-      token = localStorage.getItem(TK_KEY);
-      if (!token) { document.getElementById('loginErr').textContent = 'No GitHub token saved. Re-enter it below.'; localStorage.removeItem(PW_KEY); updateLoginUI(); return; }
-
       showView('viewMain');
       await loadData();
     };
 
-    document.getElementById('inPw').onkeydown = e => { if (e.key === 'Enter') (isSetup() ? document.getElementById('btnLogin') : document.getElementById('inToken')).focus(); };
-    document.getElementById('inToken').onkeydown = e => { if (e.key === 'Enter') document.getElementById('btnLogin').click(); };
+    document.getElementById('inPw').onkeydown = e => { if (e.key === 'Enter') document.getElementById('btnLogin').click(); };
 
     document.getElementById('btnAdd').onclick = () => openModal(null);
-    document.getElementById('btnSave').onclick = saveToGitHub;
     document.getElementById('btnLogout').onclick = doLogout;
     document.getElementById('btnCancel').onclick = closeModal;
     document.getElementById('btnModalSave').onclick = saveModal;
@@ -1129,12 +1026,11 @@
       renderList(document.getElementById('searchInput').value);
     };
 
-    if (isSetup() && localStorage.getItem(TK_KEY)) {
-      token = localStorage.getItem(TK_KEY);
+    if (localStorage.getItem(PW_KEY)) {
       showView('viewMain');
       loadData();
     } else {
-      updateLoginUI();
+      document.getElementById('loginSub').textContent = 'First-time Setup — set your password';
       showView('viewLogin');
     }
   </script>

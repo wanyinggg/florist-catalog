@@ -281,12 +281,15 @@
 
   <footer id="site-footer"></footer>
 
+  <script src="assets/supabase.js"></script>
   <script src="products.js"></script>
   <script src="assets/components.js"></script>
   <script>
     LC.renderNav('catalog');
     LC.renderFooter();
     LC.initCart({ emptyMsg: 'No items yet' });
+
+    const mq = window.matchMedia('(max-width: 768px)');
 
     function renderStorefront() {
       const main = document.getElementById('storefront');
@@ -316,11 +319,12 @@
           const card = document.createElement('div');
           card.className = 'mini-card';
           const bg = BG[Array.isArray(p.collection) ? p.collection[0] : p.collection] || '#ede8ff';
+          const firstImg = Array.isArray(p.img) ? p.img[0] : p.img;
           card.innerHTML = `
             <div class="mini-card-img" style="background:${bg}">
               ${p.img ? (Array.isArray(p.img) && p.img.length > 1
-              ? `<div class="img-track">${p.img.map(s => `<div class="img-slide"><img src="${IMG_BASE}${s}" alt="${p.name}" /></div>`).join('')}</div>`
-              : `<img src="${IMG_BASE}${Array.isArray(p.img) ? p.img[0] : p.img}" alt="${p.name}" />`) : p.emoji}
+              ? `<div class="img-track">${p.img.map(s => `<div class="img-slide"><img src="${imgSrc(s)}" alt="${p.name}" /></div>`).join('')}</div>`
+              : `<img src="${imgSrc(firstImg)}" alt="${p.name}" />`) : ''}
               ${p.badge ? `<span class="card-badge ${BADGE_CLASS[p.badge]}">${BADGE_LABEL[p.badge]}</span>` : ''}
             </div>
             <div class="mini-card-body">
@@ -349,7 +353,7 @@
           const leadSpacer = document.createElement('div');
           leadSpacer.style.cssText = `flex: 0 0 ${padPx};`;
           row.appendChild(leadSpacer);
-          items.forEach((p, i) => {
+          items.forEach(p => {
             const card = buildCard(p);
             card.style.flex = '0 0 130px';
             card.style.scrollSnapAlign = 'start';
@@ -385,23 +389,31 @@
       });
 
       if (!hasAny) {
-        main.innerHTML = '<p class="storefront-empty">🌸<br />No products yet.<br />Add your first item in <code>products.js</code>.</p>';
+        main.innerHTML = '<p class="storefront-empty">🌸<br />No products yet.</p>';
       }
     }
 
     document.getElementById('customWaBtn').href =
       `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hi! I'd like to enquire about a custom flower order")}`;
 
-    const mq = window.matchMedia('(max-width: 768px)');
     mq.addEventListener('change', () => { renderStorefront(); LC.initCarousels(); });
-
-    renderStorefront();
-    LC.initCarousels();
 
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => { renderStorefront(); LC.initCarousels(); }, 200);
+    });
+
+    document.getElementById('storefront').innerHTML =
+      '<p style="text-align:center;padding:60px 0;color:#aaa;">Loading...</p>';
+
+    sbGetProducts().then(data => {
+      PRODUCTS = data;
+      renderStorefront();
+      LC.initCarousels();
+    }).catch(() => {
+      document.getElementById('storefront').innerHTML =
+        '<p style="text-align:center;padding:60px 0;color:#c00;">Failed to load products. Please refresh.</p>';
     });
   </script>
 </body>

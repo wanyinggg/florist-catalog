@@ -185,6 +185,7 @@
 
   <footer id="site-footer"></footer>
 
+  <script src="assets/supabase.js"></script>
   <script src="products.js"></script>
   <script src="assets/components.js"></script>
   <script>
@@ -204,6 +205,7 @@
 
     function renderGrid() {
       const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
       const inCat = p => Array.isArray(p.collection) ? p.collection.includes(catId) : p.collection === catId;
       const items = (catId ? PRODUCTS.filter(inCat) : PRODUCTS).sort((a, b) => a.price - b.price);
       if (items.length === 0) {
@@ -213,16 +215,17 @@
       items.forEach(p => {
         const card = document.createElement('div'); card.className = 'product-card';
         const bg = BG[Array.isArray(p.collection) ? p.collection[0] : p.collection] || '#ede8ff';
+        const firstImg = Array.isArray(p.img) ? p.img[0] : p.img;
         card.innerHTML = `
           <div class="card-img" style="background:${bg}">
             ${p.img ? (Array.isArray(p.img) && p.img.length > 1
-            ? `<div class="img-track">${p.img.map(s => `<div class="img-slide"><img src="${IMG_BASE}${s}" alt="${p.name}" /></div>`).join('')}</div>`
-            : `<img src="${IMG_BASE}${Array.isArray(p.img) ? p.img[0] : p.img}" alt="${p.name}" />`) : `<span class="card-img-emoji">${p.emoji}</span>`}
+            ? `<div class="img-track">${p.img.map(s => `<div class="img-slide"><img src="${imgSrc(s)}" alt="${p.name}" /></div>`).join('')}</div>`
+            : `<img src="${imgSrc(firstImg)}" alt="${p.name}" />`) : ''}
             ${p.badge ? `<span class="card-badge ${BADGE_CLASS[p.badge]}">${BADGE_LABEL[p.badge]}</span>` : ''}
           </div>
           <div class="card-body">
             <p class="card-name">${p.name}</p>
-            <p class="card-desc">${p.desc}</p>
+            <p class="card-desc">${p.desc || ''}</p>
             <div class="card-footer">
               <div class="card-price">RM ${p.price}</div>
               <button class="add-btn" data-id="${p.id}">
@@ -240,8 +243,17 @@
       );
     }
 
-    renderGrid();
-    LC.initCarousels();
+    document.getElementById('productGrid').innerHTML =
+      '<p style="text-align:center;padding:60px 0;color:#aaa;">Loading...</p>';
+
+    sbGetProducts().then(data => {
+      PRODUCTS = data;
+      renderGrid();
+      LC.initCarousels();
+    }).catch(() => {
+      document.getElementById('productGrid').innerHTML =
+        '<p style="text-align:center;padding:60px 0;color:#c00;">Failed to load products. Please refresh.</p>';
+    });
   </script>
 </body>
 
