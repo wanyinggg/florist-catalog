@@ -791,7 +791,7 @@
     // ── Encoding ────────────────────────────────────────────────────────────────
     const b64Dec = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
     const strB64 = s => btoa(unescape(encodeURIComponent(s)));
-    const fileB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    const fileToDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
 
     // ── Parse & Serialize ───────────────────────────────────────────────────────
     function parseFile(content) {
@@ -861,9 +861,11 @@
         const row = document.createElement('div');
         row.className = 'product-row';
         const imgSrc = p.img ? (Array.isArray(p.img) ? p.img[0] : p.img) : null;
+        const pending = imgSrc ? pendingImgs.find(x => x.filename === imgSrc) : null;
+        const thumbSrc = pending ? pending.dataUrl : imgSrc ? `${IMG_DIR}/${imgSrc}` : null;
         const cols = (Array.isArray(p.collection) ? p.collection : [p.collection]).join(', ');
         row.innerHTML = `
-      <div class="pr-thumb">${imgSrc ? `<img src="${IMG_DIR}/${imgSrc}" alt="" onerror="this.style.display='none'"/>` : '🌸'}</div>
+      <div class="pr-thumb">${thumbSrc ? `<img src="${thumbSrc}" alt="" onerror="this.style.display='none'"/>` : '🌸'}</div>
       <div class="pr-info">
         <span class="pr-name">${p.name}</span>
         <span class="pr-price">RM ${p.price}</span>
@@ -903,7 +905,9 @@
       modalImgs.forEach((img, i) => {
         const chip = document.createElement('div');
         chip.className = 'img-chip';
-        chip.innerHTML = `<img src="${IMG_DIR}/${img}" alt="" onerror="this.style.display='none'"/><span title="${img}">${img}</span><button type="button" class="img-rm" title="Remove">✕</button>`;
+        const pending = pendingImgs.find(p => p.filename === img);
+        const src = pending ? pending.dataUrl : `${IMG_DIR}/${img}`;
+        chip.innerHTML = `<img src="${src}" alt="" onerror="this.style.display='none'"/><span title="${img}">${img}</span><button type="button" class="img-rm" title="Remove">✕</button>`;
         chip.querySelector('.img-rm').onclick = () => { modalImgs.splice(i, 1); renderImgChips(modalImgs); };
         c.appendChild(chip);
       });
@@ -996,9 +1000,10 @@
     // ── Image upload ────────────────────────────────────────────────────────────
     async function handleFiles(files) {
       for (const f of files) {
-        const base64 = await fileB64(f);
+        const dataUrl = await fileToDataUrl(f);
+        const base64 = dataUrl.split(',')[1];
         const filename = f.name.replace(/\s+/g, '-');
-        pendingImgs.push({ filename, base64 });
+        pendingImgs.push({ filename, base64, dataUrl });
         modalImgs.push(filename);
       }
       renderImgChips(modalImgs);
