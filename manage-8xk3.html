@@ -268,8 +268,21 @@
 
     /* Search */
     .search-bar {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
+
+    /* Category filter */
+    .cat-filter {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;
+    }
+    .cat-btn {
+      background: none; border: 1.5px solid var(--purple-light); border-radius: 20px;
+      padding: 5px 14px; font-family: 'Inter', sans-serif; font-size: .75rem;
+      font-weight: 500; color: var(--muted); cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .cat-btn:hover { background: var(--purple-light); color: var(--purple); }
+    .cat-btn.active { background: var(--purple); color: var(--white); border-color: var(--purple); }
 
     .search-bar input {
       width: 100%;
@@ -693,6 +706,7 @@
       <div class="search-bar">
         <input type="search" id="searchInput" placeholder="Search products…" />
       </div>
+      <div class="cat-filter" id="catFilter"></div>
       <div id="loading">Loading…</div>
       <div id="productList"></div>
     </div>
@@ -765,7 +779,7 @@
     const PW_KEY = 'lc_adm_pw', TK_KEY = 'lc_adm_tk';
 
     let token = '', products = [], tabs = [], fileSha = '', fileHeader = '';
-    let editingId = null, modalImgs = [], pendingImgs = [], dirty = false;
+    let editingId = null, modalImgs = [], pendingImgs = [], dirty = false, activeCat = '';
 
     // ── GitHub API ──────────────────────────────────────────────────────────────
     async function ghGet(path) {
@@ -851,11 +865,31 @@
     }
 
     // ── Product list ────────────────────────────────────────────────────────────
+    function buildCatFilter() {
+      const bar = document.getElementById('catFilter');
+      bar.innerHTML = '';
+      const all = document.createElement('button');
+      all.className = 'cat-btn' + (activeCat === '' ? ' active' : '');
+      all.textContent = 'All';
+      all.onclick = () => { activeCat = ''; buildCatFilter(); renderList(document.getElementById('searchInput').value); };
+      bar.appendChild(all);
+      tabs.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-btn' + (activeCat === t.id ? ' active' : '');
+        btn.textContent = t.label;
+        btn.onclick = () => { activeCat = t.id; buildCatFilter(); renderList(document.getElementById('searchInput').value); };
+        bar.appendChild(btn);
+      });
+    }
+
     function renderList(filter = '') {
       const list = document.getElementById('productList');
       const q = filter.toLowerCase();
-      const visible = q ? products.filter(p => p.name.toLowerCase().includes(q) || String(p.price).includes(q)) : products;
-      document.getElementById('bodyMeta').textContent = `${products.length} products${q ? ` · ${visible.length} shown` : ''}`;
+      let visible = activeCat
+        ? products.filter(p => (Array.isArray(p.collection) ? p.collection : [p.collection]).includes(activeCat))
+        : products;
+      if (q) visible = visible.filter(p => p.name.toLowerCase().includes(q) || String(p.price).includes(q));
+      document.getElementById('bodyMeta').textContent = `${products.length} products${visible.length !== products.length ? ` · ${visible.length} shown` : ''}`;
       list.innerHTML = '';
       visible.forEach(p => {
         const row = document.createElement('div');
@@ -1020,6 +1054,7 @@
         fileSha = data.sha;
         parseFile(b64Dec(data.content));
         buildColGrid();
+        buildCatFilter();
         renderList();
       } catch (err) {
         toast('Load failed: ' + err.message, true);
