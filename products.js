@@ -80,7 +80,7 @@ const PRODUCTS = [
     desc: "",
     price: 29,
     img: "small-grad-bear.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -89,7 +89,7 @@ const PRODUCTS = [
     desc: "",
     price: 49,
     img: ["small-sunflower-doll.png", "small-sunflower-doll-1.png"],
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -107,7 +107,7 @@ const PRODUCTS = [
     desc: "",
     price: 32,
     img: "2-purple-tulips.png",
-    collection: ["purple"],
+    collection: "purple",
     badge: "",
   },
   {
@@ -116,7 +116,7 @@ const PRODUCTS = [
     desc: "",
     price: 165,
     img: "medium-large-pink-sunflower.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -125,7 +125,7 @@ const PRODUCTS = [
     desc: "",
     price: 39,
     img: "sunflower-fmn.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -134,7 +134,7 @@ const PRODUCTS = [
     desc: "",
     price: 185,
     img: "large-white-sunflower.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -143,7 +143,7 @@ const PRODUCTS = [
     desc: "",
     price: 185,
     img: "large-brown-sunflower.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -152,7 +152,7 @@ const PRODUCTS = [
     desc: "",
     price: 25,
     img: ["small-sunflower.png", "small-sunflower-1.png"],
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -161,7 +161,7 @@ const PRODUCTS = [
     desc: "",
     price: 179,
     img: ["medium-large-blue-lily.png", "medium-large-blue-lily (1).png"],
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -170,7 +170,7 @@ const PRODUCTS = [
     desc: "",
     price: 132,
     img: "medium-large-brown-sunflower.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -179,7 +179,7 @@ const PRODUCTS = [
     desc: "",
     price: 115,
     img: "medium-large-5-sunflowers.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -188,7 +188,7 @@ const PRODUCTS = [
     desc: "",
     price: 192,
     img: "large-snoopy.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -197,7 +197,7 @@ const PRODUCTS = [
     desc: "Available in multiple colours",
     price: 24,
     img: "mini-grad-doll.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -206,7 +206,7 @@ const PRODUCTS = [
     desc: "",
     price: 135,
     img: "medium-large-single-sunflower.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -215,7 +215,7 @@ const PRODUCTS = [
     desc: "",
     price: 155,
     img: "colourful-lily.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -239,7 +239,7 @@ const PRODUCTS = [
       "grad-doll-5-flowers (3).png",
       "grad-doll-5-flowers (4).png",
     ],
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -248,7 +248,7 @@ const PRODUCTS = [
     desc: "Includes Crybaby plushie (subject to availability)",
     price: 329,
     img: "large-crybaby.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -264,7 +264,7 @@ const PRODUCTS = [
       "medium-grad-calla-lily (2).png",
       "medium-grad-calla-lily (3).png",
     ],
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
     height: "40 cm",
     width: "30 cm",
@@ -275,7 +275,7 @@ const PRODUCTS = [
     desc: "",
     price: 65,
     img: "grad-doll-rose.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -284,7 +284,7 @@ const PRODUCTS = [
     desc: "Available in multiple colours",
     price: 32,
     img: ["mini-premium-grad-doll.png", "mini-premium-grad-doll (1).png"],
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -293,7 +293,7 @@ const PRODUCTS = [
     desc: "Available in multiple colours",
     price: 35,
     img: ["bear-5-flowers.png"],
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -302,7 +302,7 @@ const PRODUCTS = [
     desc: "",
     price: 79,
     img: "white-yellow-lily.png",
-    collection: ["yellow"],
+    collection: "yellow",
     badge: "",
   },
   {
@@ -311,7 +311,7 @@ const PRODUCTS = [
     desc: "",
     price: 85,
     img: "5-small-sunflowers.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -320,7 +320,7 @@ const PRODUCTS = [
     desc: "",
     price: 128,
     img: "medium-pink-white-ribbon.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -328,8 +328,12 @@ const PRODUCTS = [
     name: "🧧🧨 Fortune in Red",
     desc: "",
     price: 98,
-    img: ["cny (1).png", "cny (3).png", "cny (4).jpeg"],
-    collection: ["cny"],
+    img: [
+      "cny (1).png",
+      "cny (3).png",
+      "cny (4).jpeg",
+    ],
+    collection: "cny",
     badge: "",
   },
   {
@@ -338,7 +342,7 @@ const PRODUCTS = [
     desc: "",
     price: 130,
     img: "sunflower-pink-lily.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -347,7 +351,7 @@ const PRODUCTS = [
     desc: "",
     price: 125,
     img: "blue-lily-tulips.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -356,7 +360,7 @@ const PRODUCTS = [
     desc: "",
     price: 249,
     img: "xl-blue-lily.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -383,7 +387,7 @@ const PRODUCTS = [
     desc: "",
     price: 49,
     img: "3-carnation-pink.png",
-    collection: ["mothers"],
+    collection: "mothers",
     badge: "",
   },
   {
@@ -392,7 +396,7 @@ const PRODUCTS = [
     desc: "",
     price: 25,
     img: "single-carnation.png",
-    collection: ["mothers"],
+    collection: "mothers",
     badge: "",
   },
   {
@@ -419,7 +423,7 @@ const PRODUCTS = [
     desc: "",
     price: 79,
     img: "sunflower-blue-rose.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -482,7 +486,7 @@ const PRODUCTS = [
     desc: "",
     price: 120,
     img: "purple-yellow-grad.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -491,7 +495,7 @@ const PRODUCTS = [
     desc: "",
     price: 132,
     img: "medium-yellow-white.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -500,7 +504,7 @@ const PRODUCTS = [
     desc: "",
     price: 159,
     img: "orange-yellow-grad.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -518,7 +522,7 @@ const PRODUCTS = [
     desc: "",
     price: 105,
     img: "sunflower-blue-white.png",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -527,7 +531,7 @@ const PRODUCTS = [
     desc: "",
     price: 120,
     img: "pink-lily-brown.jpeg",
-    collection: ["graduation"],
+    collection: "graduation",
     badge: "",
   },
   {
@@ -536,7 +540,7 @@ const PRODUCTS = [
     desc: "",
     price: 149,
     img: ["bunny-basket.png", "bunny-basket-1.png"],
-    collection: ["basket"],
+    collection: "basket",
     badge: "",
     height: "28cm",
     width: "19cm",
@@ -547,7 +551,7 @@ const PRODUCTS = [
     desc: "",
     price: 49,
     img: "purple-pink-carnation.png",
-    collection: ["mothers"],
+    collection: "mothers",
     badge: "",
-  },
+  }
 ];
