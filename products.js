@@ -556,7 +556,7 @@ const PRODUCTS = [
   },
   {
     id: 54,
-    name: "Petals & Glory",
+    name: "👩‍🎓🌸 Petals & Glory",
     desc: "",
     price: 59,
     img: "6E88D09D-6BF2-483A-95E9-DCFD484F038D.png",
