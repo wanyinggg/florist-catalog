@@ -703,8 +703,9 @@
         <h1 class="body-title">Products</h1>
         <span class="body-meta" id="bodyMeta"></span>
       </div>
-      <div class="search-bar">
+      <div class="search-bar" style="display:flex;gap:8px;align-items:center;">
         <input type="search" id="searchInput" placeholder="Search products…" />
+        <button class="btn-sm" id="btnSort" style="white-space:nowrap;flex-shrink:0;">Price ↑</button>
       </div>
       <div class="cat-filter" id="catFilter"></div>
       <div id="loading">Loading…</div>
@@ -779,7 +780,7 @@
     const PW_KEY = 'lc_adm_pw', TK_KEY = 'lc_adm_tk';
 
     let token = '', products = [], tabs = [], fileSha = '', fileHeader = '';
-    let editingId = null, modalImgs = [], pendingImgs = [], dirty = false, activeCat = '';
+    let editingId = null, modalImgs = [], pendingImgs = [], dirty = false, activeCat = '', sortDir = 0; // 0=none,1=asc,-1=desc
 
     // ── GitHub API ──────────────────────────────────────────────────────────────
     async function ghGet(path) {
@@ -889,6 +890,7 @@
         ? products.filter(p => (Array.isArray(p.collection) ? p.collection : [p.collection]).includes(activeCat))
         : products;
       if (q) visible = visible.filter(p => p.name.toLowerCase().includes(q) || String(p.price).includes(q));
+      if (sortDir) visible = [...visible].sort((a, b) => sortDir * (a.price - b.price));
       document.getElementById('bodyMeta').textContent = `${products.length} products${visible.length !== products.length ? ` · ${visible.length} shown` : ''}`;
       list.innerHTML = '';
       visible.forEach(p => {
@@ -1120,9 +1122,21 @@
     document.getElementById('btnUpload').onclick = () => document.getElementById('fileInput').click();
     document.getElementById('fileInput').onchange = e => { if (e.target.files.length) handleFiles(Array.from(e.target.files)); e.target.value = ''; };
     document.getElementById('searchInput').oninput = e => renderList(e.target.value);
+    document.getElementById('btnSort').onclick = () => {
+      sortDir = sortDir === 1 ? -1 : sortDir === -1 ? 0 : 1;
+      document.getElementById('btnSort').textContent = sortDir === 1 ? 'Price ↑' : sortDir === -1 ? 'Price ↓' : 'Price';
+      document.getElementById('btnSort').classList.toggle('btn-add', sortDir !== 0);
+      renderList(document.getElementById('searchInput').value);
+    };
 
-    updateLoginUI();
-    showView('viewLogin');
+    if (isSetup() && localStorage.getItem(TK_KEY)) {
+      token = localStorage.getItem(TK_KEY);
+      showView('viewMain');
+      loadData();
+    } else {
+      updateLoginUI();
+      showView('viewLogin');
+    }
   </script>
 </body>
 
