@@ -60,7 +60,7 @@ async function sbUploadImage(filename, base64, mimeType) {
     method: 'POST',
     headers: {
       apikey: SB_KEY,
-      Authorization: `Bearer ${SB_ANON}`,
+      Authorization: `Bearer ${SB_KEY}`,
       'Content-Type': mimeType || 'image/jpeg',
       'x-upsert': 'true',
     },
