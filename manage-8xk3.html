@@ -639,6 +639,70 @@
       background: var(--pink-deep);
     }
 
+    /* Confirm dialog */
+    .confirm-bg {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.35);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 600;
+    }
+
+    .confirm-box {
+      background: var(--white);
+      border-radius: 18px;
+      padding: 28px 28px 20px;
+      width: min(320px, 90vw);
+      box-shadow: 0 8px 40px rgba(0,0,0,.18);
+      text-align: center;
+    }
+
+    .confirm-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .confirm-msg {
+      font-size: .95rem;
+      color: var(--text);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .confirm-sub {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: 22px;
+    }
+
+    .confirm-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    .confirm-btns button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: .85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+
+    .confirm-btns button:hover { opacity: .85; }
+
+    .btn-confirm-cancel {
+      background: var(--purple-light);
+      color: var(--text);
+    }
+
+    .btn-confirm-ok {
+      background: var(--pink-deep);
+      color: #fff;
+    }
+
     @media(max-width:600px) {
       .fg-grid {
         grid-template-columns: 1fr;
@@ -770,12 +834,44 @@
 
   <div class="toast" id="toast"></div>
 
+  <div class="confirm-bg hidden" id="confirmDlg">
+    <div class="confirm-box">
+      <div class="confirm-icon">🗑️</div>
+      <div class="confirm-msg" id="confirmMsg"></div>
+      <div class="confirm-sub" id="confirmSub"></div>
+      <div class="confirm-btns">
+        <button class="btn-confirm-cancel" id="confirmCancel">Cancel</button>
+        <button class="btn-confirm-ok" id="confirmOk">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <script src="assets/supabase.js"></script>
   <script src="products.js"></script>
   <script>
     if (location.hostname === 'lazycloudd.com') { location.replace('/'); }
 
     const PW_KEY = 'lc_adm_pw';
+
+    function showConfirm(msg, sub) {
+      return new Promise(resolve => {
+        document.getElementById('confirmMsg').textContent = msg;
+        document.getElementById('confirmSub').textContent = sub || '';
+        document.getElementById('confirmDlg').classList.remove('hidden');
+        const ok = document.getElementById('confirmOk');
+        const cancel = document.getElementById('confirmCancel');
+        function close(val) {
+          document.getElementById('confirmDlg').classList.add('hidden');
+          ok.removeEventListener('click', onOk);
+          cancel.removeEventListener('click', onCancel);
+          resolve(val);
+        }
+        const onOk = () => close(true);
+        const onCancel = () => close(false);
+        ok.addEventListener('click', onOk);
+        cancel.addEventListener('click', onCancel);
+      });
+    }
     const fileToDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
 
     let products = [], tabs = TABS;
@@ -843,7 +939,8 @@
       </div>`;
         row.querySelector('.btn-edit').onclick = () => openModal(p.id);
         row.querySelector('.btn-del').onclick = async () => {
-          if (!confirm(`Delete "${p.name}"?`)) return;
+          const ok = await showConfirm(`Delete "${p.name}"?`, 'This cannot be undone.');
+          if (!ok) return;
           try {
             await sbDelete(p.id);
             products = products.filter(x => x.id !== p.id);
