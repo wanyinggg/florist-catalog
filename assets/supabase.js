@@ -1,5 +1,6 @@
 const SB_URL = 'https://xfjdmffruozupsvefzfm.supabase.co';
 const SB_KEY = 'sb_publishable_ffkmaavk3IC_MYMhonZijA_ci3-c1oT';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjQ4NTM3NzYwMDB9.gO0cgsLrh5zxTSKh88-kwNMcxgucJCcYHSoCXzEDbfg';
 const SB_IMG_BASE = `${SB_URL}/storage/v1/object/public/images/`;
 
 async function sbFetch(path, opts = {}) {
@@ -59,7 +60,7 @@ async function sbUploadImage(filename, base64, mimeType) {
     method: 'POST',
     headers: {
       apikey: SB_KEY,
-      Authorization: `Bearer ${SB_KEY}`,
+      Authorization: `Bearer ${SB_ANON}`,
       'Content-Type': mimeType || 'image/jpeg',
       'x-upsert': 'true',
     },
