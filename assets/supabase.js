@@ -1,16 +1,13 @@
 const SB_URL = 'https://xfjdmffruozupsvefzfm.supabase.co';
-const SB_KEY = 'sb_publishable_ffkmaavk3IC_MYMhonZijA_ci3-c1oT'; // always used as apikey
+const SB_KEY = 'sb_publishable_ffkmaavk3IC_MYMhonZijA_ci3-c1oT';
 const SB_IMG_BASE = `${SB_URL}/storage/v1/object/public/images/`;
 
-// Admin writes use the service key (JWT) stored in localStorage for Authorization
-function _adminKey() { return localStorage.getItem('lc_adm_sk') || SB_KEY; }
-
-async function sbFetch(path, opts = {}, authKey = SB_KEY) {
+async function sbFetch(path, opts = {}) {
   const res = await fetch(`${SB_URL}${path}`, {
     ...opts,
     headers: {
       apikey: SB_KEY,
-      Authorization: `Bearer ${authKey}`,
+      Authorization: `Bearer ${SB_KEY}`,
       'Content-Type': 'application/json',
       ...opts.headers,
     },
@@ -38,7 +35,7 @@ async function sbInsert(product) {
     method: 'POST',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(product),
-  }, _adminKey());
+  });
 }
 
 async function sbUpdate(id, product) {
@@ -46,11 +43,11 @@ async function sbUpdate(id, product) {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(product),
-  }, _adminKey());
+  });
 }
 
 async function sbDelete(id) {
-  return sbFetch(`/rest/v1/products?id=eq.${id}`, { method: 'DELETE', raw: true }, _adminKey());
+  return sbFetch(`/rest/v1/products?id=eq.${id}`, { method: 'DELETE', raw: true });
 }
 
 async function sbUploadImage(filename, base64, mimeType) {
@@ -58,12 +55,11 @@ async function sbUploadImage(filename, base64, mimeType) {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   const blob = new Blob([bytes], { type: mimeType || 'image/jpeg' });
-  const authKey = _adminKey();
   const res = await fetch(`${SB_URL}/storage/v1/object/images/${encodeURIComponent(filename)}`, {
     method: 'POST',
     headers: {
       apikey: SB_KEY,
-      Authorization: `Bearer ${authKey}`,
+      Authorization: `Bearer ${SB_KEY}`,
       'Content-Type': mimeType || 'image/jpeg',
       'x-upsert': 'true',
     },
