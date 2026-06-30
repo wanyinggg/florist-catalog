@@ -1,13 +1,13 @@
 const SB_URL = 'https://xfjdmffruozupsvefzfm.supabase.co';
-const SB_KEY = 'sb_publishable_ffkmaavk3IC_MYMhonZijA_ci3-c1oT';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjQ4NTM3NzYwMDB9.gO0cgsLrh5zxTSKh88-kwNMcxgucJCcYHSoCXzEDbfg';
 const SB_IMG_BASE = `${SB_URL}/storage/v1/object/public/images/`;
 
-async function sbFetch(path, opts = {}) {
+async function sbFetch(path, opts = {}, key = SB_ANON) {
   const res = await fetch(`${SB_URL}${path}`, {
     ...opts,
     headers: {
-      apikey: SB_KEY,
-      Authorization: `Bearer ${SB_KEY}`,
+      apikey: key,
+      Authorization: `Bearer ${key}`,
       'Content-Type': 'application/json',
       ...opts.headers,
     },
@@ -30,12 +30,15 @@ async function sbGetProduct(id) {
   return data?.[0] ?? null;
 }
 
+// Write operations — require the service key stored in localStorage by the admin page
+function _adminKey() { return localStorage.getItem('lc_adm_sk') || SB_ANON; }
+
 async function sbInsert(product) {
   return sbFetch('/rest/v1/products', {
     method: 'POST',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(product),
-  });
+  }, _adminKey());
 }
 
 async function sbUpdate(id, product) {
@@ -43,11 +46,11 @@ async function sbUpdate(id, product) {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(product),
-  });
+  }, _adminKey());
 }
 
 async function sbDelete(id) {
-  return sbFetch(`/rest/v1/products?id=eq.${id}`, { method: 'DELETE', raw: true });
+  return sbFetch(`/rest/v1/products?id=eq.${id}`, { method: 'DELETE', raw: true }, _adminKey());
 }
 
 async function sbUploadImage(filename, base64, mimeType) {
@@ -55,11 +58,12 @@ async function sbUploadImage(filename, base64, mimeType) {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   const blob = new Blob([bytes], { type: mimeType || 'image/jpeg' });
+  const key = _adminKey();
   const res = await fetch(`${SB_URL}/storage/v1/object/images/${encodeURIComponent(filename)}`, {
     method: 'POST',
     headers: {
-      apikey: SB_KEY,
-      Authorization: `Bearer ${SB_KEY}`,
+      apikey: key,
+      Authorization: `Bearer ${key}`,
       'Content-Type': mimeType || 'image/jpeg',
       'x-upsert': 'true',
     },

@@ -682,7 +682,11 @@
         <label>Password</label>
         <input type="password" id="inPw" placeholder="Admin password" autocomplete="current-password" />
       </div>
-        <button class="btn-primary" id="btnLogin">Login</button>
+      <div class="fg hidden" id="fgSk">
+        <label>Supabase Service Key <span style="font-weight:400;text-transform:none;letter-spacing:0">(first-time setup)</span></label>
+        <input type="password" id="inSk" placeholder="eyJ..." autocomplete="off" />
+      </div>
+      <button class="btn-primary" id="btnLogin">Login</button>
       <p class="err" id="loginErr"></p>
     </div>
   </div>
@@ -775,7 +779,7 @@
   <script>
     if (location.hostname === 'lazycloudd.com') { location.replace('/'); }
 
-    const PW_KEY = 'lc_adm_pw';
+    const PW_KEY = 'lc_adm_pw', SK_KEY = 'lc_adm_sk';
     const fileToDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
 
     let products = [], tabs = TABS;
@@ -1009,7 +1013,11 @@
       if (!pw) { document.getElementById('loginErr').textContent = 'Enter your password.'; return; }
       const saved = localStorage.getItem(PW_KEY);
       if (!saved) {
+        // First-time setup — also need the service key
+        const sk = document.getElementById('inSk').value.trim();
+        if (!sk) { document.getElementById('loginErr').textContent = 'Enter your Supabase service key.'; return; }
         localStorage.setItem(PW_KEY, pw);
+        localStorage.setItem(SK_KEY, sk);
       } else if (pw !== saved) {
         document.getElementById('loginErr').textContent = 'Incorrect password.';
         return;
@@ -1040,7 +1048,8 @@
       showView('viewMain');
       loadData();
     } else {
-      document.getElementById('loginSub').textContent = 'First-time Setup — set your password';
+      document.getElementById('loginSub').textContent = 'First-time Setup';
+      document.getElementById('fgSk').classList.remove('hidden');
       showView('viewLogin');
     }
   </script>
