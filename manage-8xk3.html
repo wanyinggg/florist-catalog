@@ -299,9 +299,72 @@
 
     /* Collection list */
     #collectionList {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .collection-row {
+      background: var(--white);
+      border: 1.5px solid var(--purple-light);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 12px;
+    }
+
+    .cr-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .cr-label {
+      font-size: .85rem;
+      color: var(--purple);
+      font-weight: 500;
+    }
+
+    .cr-meta {
+      font-size: .7rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .cr-btns {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .cr-btns button {
+      border: 1.5px solid var(--purple-light);
+      border-radius: 8px;
+      background: none;
+      padding: 5px 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: .75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .btn-edit-inline {
+      color: var(--purple);
+    }
+
+    .btn-edit-inline:hover {
+      background: var(--purple-light);
+    }
+
+    .btn-del-inline {
+      color: var(--pink-deep);
+    }
+
+    .btn-del-inline:hover {
+      background: #fff0ee;
     }
 
     .search-bar input {
@@ -880,10 +943,6 @@
           <input type="text" id="cfId" placeholder="e.g. graduation" />
         </div>
         <div class="fg">
-          <label>Card color</label>
-          <input type="color" id="cfBg" value="#ede8ff" style="width:100%;height:38px;padding:2px;border:1.5px solid var(--purple-light);border-radius:10px;cursor:pointer;" />
-        </div>
-        <div class="fg span2">
           <label>Sort order <span style="font-weight:400;font-size:.68rem">(lower shows first)</span></label>
           <input type="number" id="cfSort" placeholder="0" step="1" />
         </div>
@@ -1061,19 +1120,18 @@
       collections.forEach(c => {
         const count = products.filter(p => (Array.isArray(p.collection) ? p.collection : [p.collection]).includes(c.id)).length;
         const row = document.createElement('div');
-        row.className = 'product-row';
+        row.className = 'collection-row';
         row.innerHTML = `
-      <div class="pr-thumb" style="background:${c.bg}"></div>
-      <div class="pr-info">
-        <span class="pr-name">${c.label}</span>
-        <span class="pr-col">${c.id} · ${count} product${count === 1 ? '' : 's'}</span>
+      <div class="cr-info">
+        <span class="cr-label">${c.label}</span>
+        <span class="cr-meta">${c.id} · ${count} product${count === 1 ? '' : 's'}</span>
       </div>
-      <div class="pr-btns">
-        <button class="btn-edit">Edit</button>
-        <button class="btn-del">Delete</button>
+      <div class="cr-btns">
+        <button class="btn-edit-inline">Edit</button>
+        <button class="btn-del-inline">Delete</button>
       </div>`;
-        row.querySelector('.btn-edit').onclick = () => openColModal(c.id);
-        row.querySelector('.btn-del').onclick = async () => {
+        row.querySelector('.btn-edit-inline').onclick = () => openColModal(c.id);
+        row.querySelector('.btn-del-inline').onclick = async () => {
           const ok = await showConfirm(
             `Delete "${c.label}"?`,
             count ? `${count} product${count === 1 ? '' : 's'} currently tagged with this collection will lose that tag.` : 'This cannot be undone.'
@@ -1103,7 +1161,6 @@
       document.getElementById('cfLabel').value = c?.label ?? '';
       document.getElementById('cfId').value = c?.id ?? '';
       document.getElementById('cfId').disabled = !!c;
-      document.getElementById('cfBg').value = c?.bg ?? '#ede8ff';
       document.getElementById('cfSort').value = c?.sort_order ?? collections.length;
       document.getElementById('colModal').classList.remove('hidden');
       setTimeout(() => document.getElementById('cfLabel').focus(), 50);
@@ -1117,7 +1174,6 @@
     async function saveColModal() {
       const label = document.getElementById('cfLabel').value.trim();
       let id = document.getElementById('cfId').value.trim();
-      const bg = document.getElementById('cfBg').value;
       const sort_order = parseInt(document.getElementById('cfSort').value, 10) || 0;
 
       if (!label) { toast('Enter a collection label.', true); return; }
@@ -1134,10 +1190,10 @@
 
       try {
         if (editingColId) {
-          const [updated] = await sbUpdateCollection(editingColId, { label, bg, sort_order });
+          const [updated] = await sbUpdateCollection(editingColId, { label, sort_order });
           collections = collections.map(c => c.id === editingColId ? updated : c);
         } else {
-          const [created] = await sbInsertCollection({ id, label, bg, sort_order });
+          const [created] = await sbInsertCollection({ id, label, sort_order });
           collections.push(created);
         }
         collections.sort((a, b) => a.sort_order - b.sort_order);
