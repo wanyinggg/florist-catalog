@@ -285,6 +285,25 @@
     .cat-btn:hover { background: var(--purple-light); color: var(--purple); }
     .cat-btn.active { background: var(--purple); color: var(--white); border-color: var(--purple); }
 
+    /* View tabs */
+    .view-tabs {
+      display: flex; gap: 6px; margin-bottom: 20px;
+    }
+    .view-tab {
+      background: none; border: 1.5px solid var(--purple-light); border-radius: 20px;
+      padding: 6px 16px; font-family: 'Inter', sans-serif; font-size: .8rem;
+      font-weight: 500; color: var(--muted); cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+    }
+    .view-tab:hover { background: var(--purple-light); color: var(--purple); }
+    .view-tab.active { background: var(--purple); color: var(--white); border-color: var(--purple); }
+
+    /* Collection list */
+    #collectionList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 12px;
+    }
+
     .search-bar input {
       width: 100%;
       max-width: 360px;
@@ -758,21 +777,35 @@
       <div class="adm-logo">Lazy Cloudd <em>Admin</em></div>
       <div class="hdr-btns">
         <button class="btn-sm btn-add" id="btnAdd">+ Add Product</button>
+        <button class="btn-sm btn-add hidden" id="btnAddCol">+ Add Collection</button>
         <button class="btn-sm" id="btnLogout">Logout</button>
       </div>
     </header>
     <div class="adm-body">
-      <div class="body-head">
-        <h1 class="body-title">Products</h1>
-        <span class="body-meta" id="bodyMeta"></span>
+      <div class="view-tabs">
+        <button class="view-tab active" data-view="products">Products</button>
+        <button class="view-tab" data-view="collections">Collections</button>
       </div>
-      <div class="search-bar" style="display:flex;gap:8px;align-items:center;">
-        <input type="search" id="searchInput" placeholder="Search products…" />
-        <button class="btn-sm" id="btnSort" style="white-space:nowrap;flex-shrink:0;">Price ↑</button>
+      <div id="productsView">
+        <div class="body-head">
+          <h1 class="body-title">Products</h1>
+          <span class="body-meta" id="bodyMeta"></span>
+        </div>
+        <div class="search-bar" style="display:flex;gap:8px;align-items:center;">
+          <input type="search" id="searchInput" placeholder="Search products…" />
+          <button class="btn-sm" id="btnSort" style="white-space:nowrap;flex-shrink:0;">Price ↑</button>
+        </div>
+        <div class="cat-filter" id="catFilter"></div>
+        <div id="loading">Loading…</div>
+        <div id="productList"></div>
       </div>
-      <div class="cat-filter" id="catFilter"></div>
-      <div id="loading">Loading…</div>
-      <div id="productList"></div>
+      <div id="collectionsView" class="hidden">
+        <div class="body-head">
+          <h1 class="body-title">Collections</h1>
+          <span class="body-meta" id="colMeta"></span>
+        </div>
+        <div id="collectionList"></div>
+      </div>
     </div>
   </div>
 
@@ -833,6 +866,35 @@
     </div>
   </div>
 
+  <!-- Collection modal -->
+  <div id="colModal" class="modal-bg hidden">
+    <div class="modal-box">
+      <h2 class="modal-title" id="colModalTitle">Add Collection</h2>
+      <div class="fg-grid">
+        <div class="fg span2">
+          <label>Label <span style="font-weight:400;font-size:.68rem">(emoji + name, shown to customers)</span></label>
+          <input type="text" id="cfLabel" placeholder="e.g. 🎓 Graduation" />
+        </div>
+        <div class="fg">
+          <label>Slug (ID) <span style="font-weight:400;font-size:.68rem">(used in URLs)</span></label>
+          <input type="text" id="cfId" placeholder="e.g. graduation" />
+        </div>
+        <div class="fg">
+          <label>Card color</label>
+          <input type="color" id="cfBg" value="#ede8ff" style="width:100%;height:38px;padding:2px;border:1.5px solid var(--purple-light);border-radius:10px;cursor:pointer;" />
+        </div>
+        <div class="fg span2">
+          <label>Sort order <span style="font-weight:400;font-size:.68rem">(lower shows first)</span></label>
+          <input type="number" id="cfSort" placeholder="0" step="1" />
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" id="btnColCancel">Cancel</button>
+        <button class="btn-ms" id="btnColModalSave">Save Collection</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <div class="confirm-bg hidden" id="confirmDlg">
@@ -874,8 +936,9 @@
     }
     const fileToDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
 
-    let products = [], tabs = TABS;
+    let products = [], collections = [];
     let editingId = null, modalImgs = [], pendingImgs = [], activeCat = '', sortDir = 0;
+    let editingColId = null, currentView = 'products';
 
     // ── UI helpers ──────────────────────────────────────────────────────────────
     function showView(id) {
@@ -899,7 +962,7 @@
       all.textContent = 'All';
       all.onclick = () => { activeCat = ''; buildCatFilter(); renderList(document.getElementById('searchInput').value); };
       bar.appendChild(all);
-      tabs.forEach(t => {
+      collections.forEach(t => {
         const btn = document.createElement('button');
         btn.className = 'cat-btn' + (activeCat === t.id ? ' active' : '');
         btn.textContent = t.label;
@@ -959,12 +1022,136 @@
     function buildColGrid() {
       const g = document.getElementById('colGrid');
       g.innerHTML = '';
-      tabs.forEach(t => {
+      collections.forEach(t => {
         const lbl = document.createElement('label');
         lbl.className = 'col-cb';
         lbl.innerHTML = `<input type="checkbox" id="col_${t.id}" value="${t.id}"/>${t.label}`;
         g.appendChild(lbl);
       });
+    }
+
+    // ── Collections view ────────────────────────────────────────────────────────
+    function setView(view) {
+      currentView = view;
+      document.getElementById('productsView').classList.toggle('hidden', view !== 'products');
+      document.getElementById('collectionsView').classList.toggle('hidden', view !== 'collections');
+      document.getElementById('btnAdd').classList.toggle('hidden', view !== 'products');
+      document.getElementById('btnAddCol').classList.toggle('hidden', view !== 'collections');
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+    }
+
+    function slugify(s) {
+      return s
+        .replace(/\p{Extended_Pictographic}/gu, '')
+        .replace(/[\u{FE00}-\u{FE0F}\u{200D}]/gu, '')
+        .toLowerCase().trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function refreshCollectionGlobals() {
+      TABS = collections;
+      BG = Object.fromEntries(collections.map(c => [c.id, c.bg]));
+    }
+
+    function renderCollections() {
+      const list = document.getElementById('collectionList');
+      document.getElementById('colMeta').textContent = `${collections.length} collections`;
+      list.innerHTML = '';
+      collections.forEach(c => {
+        const count = products.filter(p => (Array.isArray(p.collection) ? p.collection : [p.collection]).includes(c.id)).length;
+        const row = document.createElement('div');
+        row.className = 'product-row';
+        row.innerHTML = `
+      <div class="pr-thumb" style="background:${c.bg}"></div>
+      <div class="pr-info">
+        <span class="pr-name">${c.label}</span>
+        <span class="pr-col">${c.id} · ${count} product${count === 1 ? '' : 's'}</span>
+      </div>
+      <div class="pr-btns">
+        <button class="btn-edit">Edit</button>
+        <button class="btn-del">Delete</button>
+      </div>`;
+        row.querySelector('.btn-edit').onclick = () => openColModal(c.id);
+        row.querySelector('.btn-del').onclick = async () => {
+          const ok = await showConfirm(
+            `Delete "${c.label}"?`,
+            count ? `${count} product${count === 1 ? '' : 's'} currently tagged with this collection will lose that tag.` : 'This cannot be undone.'
+          );
+          if (!ok) return;
+          try {
+            await sbDeleteCollection(c.id);
+            collections = collections.filter(x => x.id !== c.id);
+            refreshCollectionGlobals();
+            renderCollections();
+            buildCatFilter();
+            buildColGrid();
+            toast('Collection deleted.');
+          } catch (err) {
+            toast('Delete failed: ' + err.message, true);
+          }
+        };
+        list.appendChild(row);
+      });
+      if (!collections.length) list.innerHTML = '<p style="color:var(--muted);font-size:.88rem;padding:40px 0">No collections yet.</p>';
+    }
+
+    function openColModal(id) {
+      editingColId = id ?? null;
+      const c = id != null ? collections.find(x => x.id === id) : null;
+      document.getElementById('colModalTitle').textContent = c ? 'Edit Collection' : 'Add Collection';
+      document.getElementById('cfLabel').value = c?.label ?? '';
+      document.getElementById('cfId').value = c?.id ?? '';
+      document.getElementById('cfId').disabled = !!c;
+      document.getElementById('cfBg').value = c?.bg ?? '#ede8ff';
+      document.getElementById('cfSort').value = c?.sort_order ?? collections.length;
+      document.getElementById('colModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('cfLabel').focus(), 50);
+    }
+
+    function closeColModal() {
+      document.getElementById('colModal').classList.add('hidden');
+      editingColId = null;
+    }
+
+    async function saveColModal() {
+      const label = document.getElementById('cfLabel').value.trim();
+      let id = document.getElementById('cfId').value.trim();
+      const bg = document.getElementById('cfBg').value;
+      const sort_order = parseInt(document.getElementById('cfSort').value, 10) || 0;
+
+      if (!label) { toast('Enter a collection label.', true); return; }
+      if (!editingColId) {
+        if (!id) id = slugify(label);
+        if (!id) { toast('Enter a valid slug.', true); return; }
+        if (collections.some(c => c.id === id)) { toast('A collection with this slug already exists.', true); return; }
+      } else {
+        id = editingColId;
+      }
+
+      const btn = document.getElementById('btnColModalSave');
+      btn.disabled = true; btn.textContent = 'Saving…';
+
+      try {
+        if (editingColId) {
+          const [updated] = await sbUpdateCollection(editingColId, { label, bg, sort_order });
+          collections = collections.map(c => c.id === editingColId ? updated : c);
+        } else {
+          const [created] = await sbInsertCollection({ id, label, bg, sort_order });
+          collections.push(created);
+        }
+        collections.sort((a, b) => a.sort_order - b.sort_order);
+        refreshCollectionGlobals();
+        buildCatFilter();
+        buildColGrid();
+        renderCollections();
+        closeColModal();
+        toast(editingColId ? 'Collection updated.' : 'Collection added.');
+      } catch (err) {
+        toast('Save failed: ' + err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save Collection';
+      }
     }
 
     function renderImgChips(imgs) {
@@ -995,7 +1182,7 @@
       document.getElementById('fWidth').value = p?.width ?? '';
       document.getElementById('fBadge').value = p?.badge ?? '';
       const cols = p ? (Array.isArray(p.collection) ? p.collection : [p.collection]) : [];
-      tabs.forEach(t => { const cb = document.getElementById(`col_${t.id}`); if (cb) cb.checked = cols.includes(t.id); });
+      collections.forEach(t => { const cb = document.getElementById(`col_${t.id}`); if (cb) cb.checked = cols.includes(t.id); });
       renderImgChips(p?.img ? (Array.isArray(p.img) ? [...p.img] : [p.img]) : []);
       document.getElementById('modal').classList.remove('hidden');
       setTimeout(() => document.getElementById('fName').focus(), 50);
@@ -1013,7 +1200,7 @@
       const height = document.getElementById('fHeight').value.trim();
       const width = document.getElementById('fWidth').value.trim();
       const badge = document.getElementById('fBadge').value;
-      const collection = tabs.filter(t => document.getElementById(`col_${t.id}`)?.checked).map(t => t.id);
+      const collection = collections.filter(t => document.getElementById(`col_${t.id}`)?.checked).map(t => t.id);
 
       if (!name) { toast('Enter a product name.', true); return; }
       if (isNaN(price) || price < 0) { toast('Enter a valid price.', true); return; }
@@ -1083,10 +1270,12 @@
       document.getElementById('loading').classList.remove('hidden');
       document.getElementById('productList').innerHTML = '';
       try {
-        products = await sbGetProducts();
+        [collections, products] = await Promise.all([sbGetCollections(), sbGetProducts()]);
+        refreshCollectionGlobals();
         buildColGrid();
         buildCatFilter();
         renderList();
+        renderCollections();
       } catch (err) {
         toast('Load failed: ' + err.message, true);
       } finally {
@@ -1123,6 +1312,11 @@
     document.getElementById('btnCancel').onclick = closeModal;
     document.getElementById('btnModalSave').onclick = saveModal;
     document.getElementById('modal').onclick = e => { if (e.target === document.getElementById('modal')) closeModal(); };
+    document.querySelectorAll('.view-tab').forEach(t => t.onclick = () => setView(t.dataset.view));
+    document.getElementById('btnAddCol').onclick = () => openColModal(null);
+    document.getElementById('btnColCancel').onclick = closeColModal;
+    document.getElementById('btnColModalSave').onclick = saveColModal;
+    document.getElementById('colModal').onclick = e => { if (e.target === document.getElementById('colModal')) closeColModal(); };
     document.getElementById('btnUpload').onclick = () => document.getElementById('fileInput').click();
     document.getElementById('fileInput').onchange = e => { if (e.target.files.length) handleFiles(Array.from(e.target.files)); e.target.value = ''; };
     document.getElementById('searchInput').oninput = e => renderList(e.target.value);

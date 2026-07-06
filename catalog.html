@@ -407,8 +407,10 @@
     document.getElementById('storefront').innerHTML =
       '<p style="text-align:center;padding:60px 0;color:#aaa;">Loading...</p>';
 
-    sbGetProducts().then(data => {
-      PRODUCTS = data;
+    Promise.all([sbGetCollections(), sbGetProducts()]).then(([cols, prods]) => {
+      TABS = cols;
+      BG = Object.fromEntries(cols.map(c => [c.id, c.bg]));
+      PRODUCTS = prods;
       renderStorefront();
       LC.initCarousels();
     }).catch(() => {

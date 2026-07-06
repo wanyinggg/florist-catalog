@@ -194,14 +194,6 @@
     LC.initCart({ emptyMsg: 'No items yet' });
 
     const catId = new URLSearchParams(window.location.search).get('cat') || '';
-    const catTab = TABS.find(t => t.id === catId);
-
-    if (catTab) {
-      document.title = `${catTab.label} — Lazy Cloudd`;
-      document.getElementById('pageTitle').textContent = catTab.label;
-    } else {
-      document.getElementById('pageTitle').textContent = 'Collection';
-    }
 
     function renderGrid() {
       const grid = document.getElementById('productGrid');
@@ -246,8 +238,19 @@
     document.getElementById('productGrid').innerHTML =
       '<p style="text-align:center;padding:60px 0;color:#aaa;">Loading...</p>';
 
-    sbGetProducts().then(data => {
-      PRODUCTS = data;
+    Promise.all([sbGetCollections(), sbGetProducts()]).then(([cols, prods]) => {
+      TABS = cols;
+      BG = Object.fromEntries(cols.map(c => [c.id, c.bg]));
+      PRODUCTS = prods;
+
+      const catTab = TABS.find(t => t.id === catId);
+      if (catTab) {
+        document.title = `${catTab.label} — Lazy Cloudd`;
+        document.getElementById('pageTitle').textContent = catTab.label;
+      } else {
+        document.getElementById('pageTitle').textContent = 'Collection';
+      }
+
       renderGrid();
       LC.initCarousels();
     }).catch(() => {

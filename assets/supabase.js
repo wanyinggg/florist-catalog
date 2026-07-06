@@ -51,6 +51,30 @@ async function sbDelete(id) {
   return sbFetch(`/rest/v1/products?id=eq.${id}`, { method: 'DELETE', raw: true });
 }
 
+async function sbGetCollections() {
+  return sbFetch('/rest/v1/collections?select=*&order=sort_order.asc');
+}
+
+async function sbInsertCollection(collection) {
+  return sbFetch('/rest/v1/collections', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(collection),
+  });
+}
+
+async function sbUpdateCollection(id, collection) {
+  return sbFetch(`/rest/v1/collections?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(collection),
+  });
+}
+
+async function sbDeleteCollection(id) {
+  return sbFetch(`/rest/v1/collections?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', raw: true });
+}
+
 async function sbUploadImage(filename, base64, mimeType) {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);

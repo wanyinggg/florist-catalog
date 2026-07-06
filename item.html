@@ -432,7 +432,11 @@
     document.getElementById('itemPage').innerHTML =
       '<p style="text-align:center;padding:60px 0;color:#aaa;">Loading...</p>';
 
-    sbGetProduct(id).then(p => renderItem(p)).catch(() => {
+    Promise.all([sbGetCollections(), sbGetProduct(id)]).then(([cols, p]) => {
+      TABS = cols;
+      BG = Object.fromEntries(cols.map(c => [c.id, c.bg]));
+      renderItem(p);
+    }).catch(() => {
       document.getElementById('itemPage').innerHTML =
         '<div class="not-found">🌸<br />Failed to load product. Please refresh.</div>';
     });
