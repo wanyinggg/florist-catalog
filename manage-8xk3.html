@@ -311,14 +311,32 @@
       padding: 10px 14px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 12px;
+      transition: opacity .15s, border-color .15s;
+    }
+
+    .collection-row.dragging {
+      opacity: .4;
+    }
+
+    .collection-row.drag-over {
+      border-color: var(--purple);
+    }
+
+    .cr-drag {
+      cursor: grab;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1;
+      flex-shrink: 0;
+      user-select: none;
     }
 
     .cr-info {
       display: flex;
       flex-direction: column;
       min-width: 0;
+      flex: 1;
     }
 
     .cr-label {
@@ -942,10 +960,6 @@
           <label>Slug (ID) <span style="font-weight:400;font-size:.68rem">(used in URLs)</span></label>
           <input type="text" id="cfId" placeholder="e.g. graduation" />
         </div>
-        <div class="fg">
-          <label>Sort order <span style="font-weight:400;font-size:.68rem">(lower shows first)</span></label>
-          <input type="number" id="cfSort" placeholder="0" step="1" />
-        </div>
       </div>
       <div class="modal-foot">
         <button class="btn-cancel" id="btnColCancel">Cancel</button>
@@ -1113,6 +1127,26 @@
       BG = Object.fromEntries(collections.map(c => [c.id, c.bg]));
     }
 
+    let dragSrcId = null;
+
+    async function reorderCollections(srcId, targetId) {
+      const srcIdx = collections.findIndex(c => c.id === srcId);
+      const targetIdx = collections.findIndex(c => c.id === targetId);
+      if (srcIdx === -1 || targetIdx === -1 || srcIdx === targetIdx) return;
+      const [moved] = collections.splice(srcIdx, 1);
+      collections.splice(targetIdx, 0, moved);
+      collections.forEach((c, i) => { c.sort_order = i; });
+      refreshCollectionGlobals();
+      buildCatFilter();
+      buildColGrid();
+      renderCollections();
+      try {
+        await Promise.all(collections.map(c => sbUpdateCollection(c.id, { sort_order: c.sort_order })));
+      } catch (err) {
+        toast('Reorder failed to save: ' + err.message, true);
+      }
+    }
+
     function renderCollections() {
       const list = document.getElementById('collectionList');
       document.getElementById('colMeta').textContent = `${collections.length} collections`;
@@ -1121,7 +1155,9 @@
         const count = products.filter(p => (Array.isArray(p.collection) ? p.collection : [p.collection]).includes(c.id)).length;
         const row = document.createElement('div');
         row.className = 'collection-row';
+        row.draggable = true;
         row.innerHTML = `
+      <span class="cr-drag" title="Drag to reorder">⠿</span>
       <div class="cr-info">
         <span class="cr-label">${c.label}</span>
         <span class="cr-meta">${c.id} · ${count} product${count === 1 ? '' : 's'}</span>
@@ -1130,6 +1166,25 @@
         <button class="btn-edit-inline">Edit</button>
         <button class="btn-del-inline">Delete</button>
       </div>`;
+        row.addEventListener('dragstart', e => {
+          dragSrcId = c.id;
+          row.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => row.classList.remove('dragging'));
+        row.addEventListener('dragover', e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          row.classList.add('drag-over');
+        });
+        row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+        row.addEventListener('drop', e => {
+          e.preventDefault();
+          row.classList.remove('drag-over');
+          if (dragSrcId == null) return;
+          reorderCollections(dragSrcId, c.id);
+          dragSrcId = null;
+        });
         row.querySelector('.btn-edit-inline').onclick = () => openColModal(c.id);
         row.querySelector('.btn-del-inline').onclick = async () => {
           const ok = await showConfirm(
@@ -1161,7 +1216,6 @@
       document.getElementById('cfLabel').value = c?.label ?? '';
       document.getElementById('cfId').value = c?.id ?? '';
       document.getElementById('cfId').disabled = !!c;
-      document.getElementById('cfSort').value = c?.sort_order ?? collections.length;
       document.getElementById('colModal').classList.remove('hidden');
       setTimeout(() => document.getElementById('cfLabel').focus(), 50);
     }
@@ -1174,7 +1228,6 @@
     async function saveColModal() {
       const label = document.getElementById('cfLabel').value.trim();
       let id = document.getElementById('cfId').value.trim();
-      const sort_order = parseInt(document.getElementById('cfSort').value, 10) || 0;
 
       if (!label) { toast('Enter a collection label.', true); return; }
       if (!editingColId) {
@@ -1190,13 +1243,13 @@
 
       try {
         if (editingColId) {
-          const [updated] = await sbUpdateCollection(editingColId, { label, sort_order });
+          const [updated] = await sbUpdateCollection(editingColId, { label });
           collections = collections.map(c => c.id === editingColId ? updated : c);
         } else {
+          const sort_order = collections.length;
           const [created] = await sbInsertCollection({ id, label, sort_order });
           collections.push(created);
         }
-        collections.sort((a, b) => a.sort_order - b.sort_order);
         refreshCollectionGlobals();
         buildCatFilter();
         buildColGrid();
