@@ -100,3 +100,17 @@ function imgSrc(img) {
   if (img.startsWith('http')) return img;
   return `images/${img}`;
 }
+
+// Detects video files by extension — works for both Storage URLs and legacy local filenames
+function isVideoUrl(src) {
+  return !!src && /\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i.test(src);
+}
+
+// Returns an <img> or <video> tag for a media value (string filename or full URL)
+function mediaTag(src, alt = '') {
+  const url = imgSrc(src);
+  if (!url) return '';
+  return isVideoUrl(src)
+    ? `<video src="${url}" autoplay muted loop playsinline></video>`
+    : `<img src="${url}" alt="${alt}" />`;
+}

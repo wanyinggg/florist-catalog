@@ -1,7 +1,7 @@
 /* ── Card Carousel ──────────────────────────────────────────────────────── */
 .img-track { position: absolute; inset: 0; display: flex; transition: transform 0.45s cubic-bezier(0.4,0,0.2,1); }
 .img-slide { flex: 0 0 100%; height: 100%; overflow: hidden; }
-.img-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-slide img, .img-slide video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* ── Reset & Variables ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

@@ -82,13 +82,16 @@ const LC = (() => {
     cart.forEach(({ product, qty, note }) => {
       const item = document.createElement("div");
       item.className = "cart-item";
-      const imgSrc = product.img
+      const firstMedia = product.img
         ? Array.isArray(product.img)
           ? product.img[0]
           : product.img
         : null;
-      const thumb = imgSrc
-        ? `<img class="cart-item-thumb" src="${IMG_BASE}${imgSrc}" alt="${product.name}" />`
+      const thumb = firstMedia
+        ? mediaTag(firstMedia, product.name).replace(
+            /^<(img|video)/,
+            `<$1 class="cart-item-thumb"`
+          )
         : `<span class="cart-item-emoji">${product.emoji || "🌸"}</span>`;
       item.innerHTML = `
         ${thumb}

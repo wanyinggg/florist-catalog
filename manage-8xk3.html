@@ -620,7 +620,8 @@
       max-width: 220px;
     }
 
-    .img-chip img {
+    .img-chip img,
+    .img-chip video {
       width: 30px;
       height: 36px;
       object-fit: cover;
@@ -936,9 +937,9 @@
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
-          Upload image(s)
+          Upload image(s)/video(s)
         </button>
-        <input type="file" id="fileInput" accept="image/*" multiple class="hidden" />
+        <input type="file" id="fileInput" accept="image/*,video/*" multiple class="hidden" />
       </div>
       <div class="modal-foot">
         <button class="btn-cancel" id="btnCancel">Cancel</button>
@@ -1272,8 +1273,12 @@
         chip.className = 'img-chip';
         const pending = pendingImgs.find(p => p.filename === img);
         const src = pending ? pending.dataUrl : imgSrc(img);
+        const isVideo = pending ? pending.mimeType.startsWith('video') : isVideoUrl(img);
         const displayName = img.startsWith('http') ? img.split('/').pop().split('?')[0] : img;
-        chip.innerHTML = `<img src="${src}" alt="" onerror="this.style.display='none'"/><span title="${img}">${displayName}</span><button type="button" class="img-rm" title="Remove">✕</button>`;
+        const media = isVideo
+          ? `<video src="${src}" muted playsinline onerror="this.style.display='none'"></video>`
+          : `<img src="${src}" alt="" onerror="this.style.display='none'"/>`;
+        chip.innerHTML = `${media}<span title="${img}">${displayName}</span><button type="button" class="img-rm" title="Remove">✕</button>`;
         chip.querySelector('.img-rm').onclick = () => { modalImgs.splice(i, 1); renderImgChips(modalImgs); };
         c.appendChild(chip);
       });
@@ -1361,9 +1366,15 @@
       }
     }
 
-    // ── Image upload ────────────────────────────────────────────────────────────
+    // ── Image/video upload ──────────────────────────────────────────────────────
+    const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25MB — files are base64-encoded in-browser
+
     async function handleFiles(files) {
       for (const f of files) {
+        if (f.size > MAX_UPLOAD_BYTES) {
+          toast(`${f.name} is too large (max 25MB).`, true);
+          continue;
+        }
         const dataUrl = await fileToDataUrl(f);
         const base64 = dataUrl.split(',')[1];
         const mimeType = f.type || 'image/jpeg';

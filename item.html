@@ -42,6 +42,14 @@
       position: relative;
     }
 
+    .gallery-main > img,
+    .gallery-main > video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
     .gallery-track {
       position: absolute;
       top: 0;
@@ -58,7 +66,8 @@
       flex: 0 0 100%;
     }
 
-    .gallery-slide img {
+    .gallery-slide img,
+    .gallery-slide video {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -116,7 +125,8 @@
       border-color: var(--purple);
     }
 
-    .gallery-thumb img {
+    .gallery-thumb img,
+    .gallery-thumb video {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -350,9 +360,9 @@
 
       const galleryInner = imgs.length > 0
         ? (hasMulti
-          ? `<div class="gallery-track" id="galleryTrack">${imgs.map(src => `<div class="gallery-slide"><img src="${imgSrc(src)}" alt="${p.name}" /></div>`).join('')}</div>
+          ? `<div class="gallery-track" id="galleryTrack">${imgs.map(src => `<div class="gallery-slide">${mediaTag(src, p.name)}</div>`).join('')}</div>
                <div class="gallery-dots" id="galleryDots">${imgs.map((_, i) => `<button class="gallery-dot${i === 0 ? ' active' : ''}" data-i="${i}"></button>`).join('')}</div>`
-          : `<img src="${imgSrc(imgs[0])}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;" />`)
+          : mediaTag(imgs[0], p.name))
         : `<span style="font-size:5rem">🌸</span>`;
 
       const arrows = hasMulti ? `
@@ -363,7 +373,7 @@
         <div class="gallery-thumbs" id="thumbs">
           ${imgs.map((src, i) => `
             <div class="gallery-thumb ${i === 0 ? 'active' : ''}" data-i="${i}">
-              <img src="${imgSrc(src)}" alt="" />
+              ${mediaTag(src)}
             </div>`).join('')}
         </div>` : '';
 

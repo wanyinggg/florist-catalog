@@ -79,7 +79,8 @@
       overflow: hidden;
     }
 
-    .mini-card-img img {
+    .mini-card-img img,
+    .mini-card-img video {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -323,8 +324,8 @@
           card.innerHTML = `
             <div class="mini-card-img" style="background:${bg}">
               ${p.img ? (Array.isArray(p.img) && p.img.length > 1
-              ? `<div class="img-track">${p.img.map(s => `<div class="img-slide"><img src="${imgSrc(s)}" alt="${p.name}" /></div>`).join('')}</div>`
-              : `<img src="${imgSrc(firstImg)}" alt="${p.name}" />`) : ''}
+              ? `<div class="img-track">${p.img.map(s => `<div class="img-slide">${mediaTag(s, p.name)}</div>`).join('')}</div>`
+              : mediaTag(firstImg, p.name)) : ''}
               ${p.badge ? `<span class="card-badge ${BADGE_CLASS[p.badge]}">${BADGE_LABEL[p.badge]}</span>` : ''}
             </div>
             <div class="mini-card-body">
